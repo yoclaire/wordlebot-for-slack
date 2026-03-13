@@ -367,14 +367,20 @@ def build_leaderboard(scores: dict, days: int = 7) -> str:
     ranked = sorted(user_stats.items(), key=lambda x: sum(x[1]) / len(x[1]))
 
     lines = [f"*Wordle Leaderboard* (last {len(recent)} puzzles)\n"]
+    prev_avg = None
+    current_rank = 0
     for i, (user_id, scores_list) in enumerate(ranked):
         avg = sum(scores_list) / len(scores_list)
+        rounded = round(avg, 1)
+        if rounded != prev_avg:
+            current_rank = i
+            prev_avg = rounded
         games = len(scores_list)
         best = min(scores_list)
         fails = scores_list.count(7)
         best_str = "X" if best == 7 else str(best)
         lines.append(
-            f"{rank_icon(i)} <@{user_id}> — avg *{avg:.1f}* "
+            f"{rank_icon(current_rank)} <@{user_id}> — avg *{avg:.1f}* "
             f"({games} games, best: {best_str}"
             f"{f', {fails} fails' if fails else ''})"
         )
@@ -393,13 +399,24 @@ def build_daily_summary(scores: dict) -> str | None:
 
     ranked = sorted(
         puzzle_scores.items(),
-        key=lambda x: (7 if x[1]["score"] == "X" else int(x[1]["score"])),
+        key=lambda x: (
+            7 if x[1]["score"] == "X" else int(x[1]["score"]),
+            not x[1].get("hard_mode", False),
+        ),
     )
 
     lines = [f"*Wordle {latest} Results*\n"]
+    prev_key = None
+    current_rank = 0
     for i, (user_id, data) in enumerate(ranked):
-        hm = " ⭐" if data.get("hard_mode") else ""
-        lines.append(f"{rank_icon(i)} <@{user_id}> — {data['score']}/6{hm}")
+        score_val = 7 if data["score"] == "X" else int(data["score"])
+        hm = data.get("hard_mode", False)
+        rank_key = (score_val, hm)
+        if rank_key != prev_key:
+            current_rank = i
+            prev_key = rank_key
+        hm_str = " ⭐" if hm else ""
+        lines.append(f"{rank_icon(current_rank)} <@{user_id}> — {data['score']}/6{hm_str}")
 
     # Group difficulty assessment
     all_scores = [7 if d["score"] == "X" else int(d["score"]) for d in puzzle_scores.values()]
