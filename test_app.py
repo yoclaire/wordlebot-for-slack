@@ -250,6 +250,76 @@ class TestVs(unittest.TestCase):
         self.assertIn("Need scores", vs)
 
 
+class TestTiedRankings(unittest.TestCase):
+    def test_daily_same_score_same_mode_is_tie(self):
+        scores = {
+            "100": {
+                "U1": {"score": "5", "hard_mode": True, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": True, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertEqual(summary.count("🥇"), 2)
+        self.assertNotIn("🥈", summary)
+
+    def test_daily_same_score_no_hard_mode_is_tie(self):
+        scores = {
+            "100": {
+                "U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertEqual(summary.count("🥇"), 2)
+        self.assertNotIn("🥈", summary)
+
+    def test_daily_same_score_hard_mode_breaks_tie(self):
+        scores = {
+            "100": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": True, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertEqual(summary.count("🥇"), 1)
+        self.assertEqual(summary.count("🥈"), 1)
+        # Hard mode player (U2) should rank above normal mode (U1)
+        self.assertLess(summary.index("U2"), summary.index("U1"))
+
+    def test_daily_different_scores_not_tied(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertEqual(summary.count("🥇"), 1)
+        self.assertEqual(summary.count("🥈"), 1)
+
+    def test_leaderboard_same_avg_is_tie(self):
+        scores = {
+            "100": {
+                "U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        lb = build_leaderboard(scores, days=7)
+        self.assertEqual(lb.count("🥇"), 2)
+        self.assertNotIn("🥈", lb)
+
+    def test_leaderboard_different_avg_not_tied(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        lb = build_leaderboard(scores, days=7)
+        self.assertEqual(lb.count("🥇"), 1)
+        self.assertEqual(lb.count("🥈"), 1)
+
+
 class TestRankIcon(unittest.TestCase):
     def test_top_three(self):
         self.assertEqual(rank_icon(0), "🥇")
