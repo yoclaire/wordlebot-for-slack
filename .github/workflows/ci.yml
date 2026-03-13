@@ -15,13 +15,7 @@ jobs:
       - run: pip install ruff
       - run: ruff check .
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - run: docker build -t wordlebot-test .
-
-  import-check:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -29,4 +23,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: python -c "import ast; ast.parse(open('app.py').read()); print('OK')"
+      - run: python -m unittest test_app -v
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker build -t wordlebot-test .
