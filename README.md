@@ -85,4 +85,4 @@ Scores are stored as JSON in `./data/scores.json`. The file is human-readable an
 
 ## License
 
-MIT
+GPLv3 — see [LICENSE](LICENSE). You're free to use, modify, and distribute this bot, but any distributed modifications must also be open source under the same license.
