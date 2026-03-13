@@ -93,6 +93,25 @@ MORNING_NUDGES = [
 
 # --- Data helpers ---
 
+
+def lookup_user_by_name(name: str) -> str | None:
+    """Look up a Slack user ID by display name, username, or real name."""
+    try:
+        resp = app.client.users_list()
+        for member in resp.get("members", []):
+            if member.get("deleted") or member.get("is_bot"):
+                continue
+            profile = member.get("profile", {})
+            if name.lower() in (
+                member.get("name", "").lower(),
+                profile.get("display_name", "").lower(),
+                profile.get("real_name", "").lower(),
+            ):
+                return member["id"]
+    except Exception as e:
+        logging.warning(f"Could not look up user '{name}': {e}")
+    return None
+
 def load_scores() -> dict:
     if SCORES_FILE.exists():
         return json.loads(SCORES_FILE.read_text())
@@ -573,16 +592,41 @@ def backfill_channel(channel_id: str) -> int:
 
 # --- Scheduled tasks ---
 
+def post_all_played_summary(channel_id: str, scores: dict):
+    """Post daily summary and leaderboard when all active players have played."""
+    latest = max(scores.keys(), key=lambda x: int(x.replace(",", "")))
+
+    # Check if we already posted for this puzzle
+    config = load_config()
+    if config.get("last_all_played_puzzle") == latest:
+        return
+
+    config["last_all_played_puzzle"] = latest
+    save_config(config)
+
+    app.client.chat_postMessage(
+        channel=channel_id,
+        text="Everyone's in! 🎉 Let's see how you all did.\n",
+    )
+
+    summary = build_daily_summary(scores)
+    if summary:
+        app.client.chat_postMessage(channel=channel_id, text=summary)
+
+    lb = build_leaderboard(scores, days=7)
+    app.client.chat_postMessage(channel=channel_id, text=lb)
+
+
 def schedule_daily_tasks():
-    """Run daily tasks: morning nudge at 8am, summary at 10pm, weekly champion Sunday."""
+    """Run daily tasks: morning nudge at 8am, summary at 7pm, weekly champion Sunday."""
     import time as _time
 
     while True:
         now = datetime.now()
 
-        # Next event: 8am nudge or 10pm summary
+        # Next event: 8am nudge or 7pm summary
         morning = now.replace(hour=8, minute=0, second=0, microsecond=0)
-        evening = now.replace(hour=22, minute=0, second=0, microsecond=0)
+        evening = now.replace(hour=19, minute=0, second=0, microsecond=0)
 
         targets = []
         if now < morning:
@@ -613,15 +657,20 @@ def schedule_daily_tasks():
             )
 
         elif event_type == "evening":
-            # Daily summary
-            summary = build_daily_summary(scores)
-            if summary:
-                app.client.chat_postMessage(channel=channel_id, text=summary)
+            # Skip daily summary + shame if already posted via all-played trigger
+            latest = max(scores.keys(), key=lambda x: int(x.replace(",", ""))) if scores else None
+            already_posted = latest and config.get("last_all_played_puzzle") == latest
 
-            # Shame list
-            shame = build_shame_list(scores)
-            if "Everyone" not in shame:
-                app.client.chat_postMessage(channel=channel_id, text=shame)
+            if not already_posted:
+                # Daily summary
+                summary = build_daily_summary(scores)
+                if summary:
+                    app.client.chat_postMessage(channel=channel_id, text=summary)
+
+                # Shame list
+                shame = build_shame_list(scores)
+                if "Everyone" not in shame:
+                    app.client.chat_postMessage(channel=channel_id, text=shame)
 
             # Rivalry check
             rivalry = check_rivalry(scores)
@@ -718,6 +767,13 @@ def handle_wordle_score(message, say, context):
     for reply in replies:
         say(text=reply, thread_ts=message["ts"])
 
+    # Check if all active players have now played — post summary immediately
+    active = get_active_players(scores)
+    latest = max(scores.keys(), key=lambda x: int(x.replace(",", "")))
+    today_players = set(scores[latest].keys())
+    if active and active <= today_players:
+        post_all_played_summary(message["channel"], scores)
+
 
 @app.command("/wordle")
 def handle_wordle_command(ack, respond, say, command):
@@ -751,6 +807,12 @@ def handle_wordle_command(ack, respond, say, command):
         mention_match = re.search(r"<@(\w+)(?:\|[^>]*)?>", args)
         if mention_match:
             other_user = mention_match.group(1)
+        else:
+            # Slack may not escape mentions in slash commands — look up by name
+            name = re.sub(r"^vs\s+@?", "", args, flags=re.IGNORECASE).strip()
+            other_user = lookup_user_by_name(name) if name else None
+
+        if other_user:
             respond(text=build_vs(scores, command["user_id"], other_user))
         else:
             respond(text="Usage: `/wordle vs @someone`")
@@ -784,6 +846,22 @@ def handle_wordle_command(ack, respond, say, command):
             check_achievements(scores, uid)
         respond(text=f"Backfill complete! Found {count} new scores. Achievements recalculated for {len(all_users)} players.")
 
+    elif args_lower == "invite":
+        say(text=(
+            "👋 *Hey everyone!* I'm the Wordle bot for this channel.\n\n"
+            "Here's how it works: play the daily Wordle at https://www.nytimes.com/games/wordle/ "
+            "and paste your share result here. I'll track your scores, keep a leaderboard, "
+            "and talk a little trash along the way.\n\n"
+            "*What to expect:*\n"
+            "• 📊 Leaderboards, streaks, and head-to-head rivalries\n"
+            "• 🏆 Achievements and milestones as you play\n"
+            "• 🎉 As soon as all active players have posted, I'll drop the daily results and leaderboard — no waiting around\n"
+            "• 👀 A gentle nudge if you forget\n\n"
+            "You're considered an \"active player\" once you post your first score, "
+            "and you stay active as long as you've played at least once in the last 14 puzzles.\n\n"
+            "Type `/wordle help` to see all commands. Now get in here!"
+        ))
+
     elif args_lower == "help":
         respond(text=(
             "*Wordle Bot Commands*\n\n"
@@ -792,7 +870,8 @@ def handle_wordle_command(ack, respond, say, command):
             "• `/wordle monthly` — last 30 days\n"
             "• `/wordle alltime` — all time\n"
             "• `/wordle today` — today's puzzle results\n"
-            "• `/wordle shame` — who hasn't played today\n\n"
+            "• `/wordle shame` — who hasn't played today\n"
+            "• `/wordle invite` — introduce the bot to the channel\n\n"
             "*🔒 Private (only you):*\n"
             "• `/wordle me` — your personal stats & badges\n"
             "• `/wordle vs @someone` — head-to-head comparison\n"
