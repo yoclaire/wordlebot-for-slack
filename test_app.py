@@ -67,6 +67,9 @@ build_daily_summary = _test_globals["build_daily_summary"]
 build_personal_stats = _test_globals["build_personal_stats"]
 build_vs = _test_globals["build_vs"]
 build_hardest_puzzles = _test_globals["build_hardest_puzzles"]
+build_shame_list = _test_globals["build_shame_list"]
+get_active_players = _test_globals["get_active_players"]
+check_rivalry = _test_globals["check_rivalry"]
 rank_icon = _test_globals["rank_icon"]
 
 
@@ -318,6 +321,86 @@ class TestTiedRankings(unittest.TestCase):
         lb = build_leaderboard(scores, days=7)
         self.assertEqual(lb.count("🥇"), 1)
         self.assertEqual(lb.count("🥈"), 1)
+
+
+class TestGetActivePlayers(unittest.TestCase):
+    def test_finds_all_recent_players(self):
+        active = get_active_players(SAMPLE_SCORES, lookback=14)
+        self.assertEqual(active, {"U1", "U2"})
+
+    def test_lookback_limits_scope(self):
+        # U2 only played puzzles 1300 and 1301, not 1302
+        # With lookback=1, only the latest puzzle (1302) is considered
+        active = get_active_players(SAMPLE_SCORES, lookback=1)
+        self.assertEqual(active, {"U1"})
+
+    def test_empty_scores(self):
+        active = get_active_players({})
+        self.assertEqual(active, set())
+
+
+class TestShameList(unittest.TestCase):
+    def test_everyone_played(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        shame = build_shame_list(scores)
+        self.assertIn("Everyone", shame)
+
+    def test_someone_missing(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            },
+            "101": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
+            },
+        }
+        shame = build_shame_list(scores)
+        self.assertIn("U2", shame)
+        self.assertNotIn("U1", shame)
+
+    def test_empty_scores(self):
+        shame = build_shame_list({})
+        self.assertIn("No scores", shame)
+
+
+class TestRivalry(unittest.TestCase):
+    def test_close_rivalry_detected(self):
+        # Two players with very close averages over 5+ games
+        scores = {}
+        for i in range(10):
+            scores[str(100 + i)] = {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        rivalry = check_rivalry(scores)
+        self.assertIsNotNone(rivalry)
+        self.assertIn("Rivalry", rivalry)
+
+    def test_no_rivalry_when_gap_is_large(self):
+        scores = {}
+        for i in range(10):
+            scores[str(100 + i)] = {
+                "U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "6", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        rivalry = check_rivalry(scores)
+        self.assertIsNone(rivalry)
+
+    def test_not_enough_games(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        rivalry = check_rivalry(scores)
+        self.assertIsNone(rivalry)
 
 
 class TestRankIcon(unittest.TestCase):
