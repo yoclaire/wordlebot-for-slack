@@ -1,0 +1,10 @@
+services:
+  wordlebot:
+    build: .
+    container_name: wordlebot
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ./data:/app/data
