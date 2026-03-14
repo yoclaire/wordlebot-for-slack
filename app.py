@@ -11,7 +11,8 @@ import json
 import random
 import logging
 import threading
-from datetime import datetime, timedelta
+import urllib.request
+from datetime import datetime, timedelta, date
 from pathlib import Path
 
 from slack_bolt import App
@@ -88,10 +89,31 @@ MORNING_NUDGES = [
     "🌅 rise and wordle.",
     "📰 today's wordle is live. no spoilers.",
     "good morning! the wordle awaits: https://www.nytimes.com/games/wordle/",
+    "🧩 another day, another wordle. let's see what you've got.",
+    "🔤 five letters. six guesses. no excuses.",
+    "🌄 the grid awaits. don't keep it waiting.",
+    "⏰ wordle o'clock. you know the drill.",
+    "🎯 today's wordle is out there. go find it.",
+    "🧠 time to flex. wordle's up.",
+    "📬 your daily wordle has arrived.",
+    "🪵 rise, shine, wordle.",
 ]
 
 
 # --- Data helpers ---
+
+
+def fetch_wordle_answer(puzzle_date: date) -> str | None:
+    """Fetch the Wordle answer for a given date from the NYT API."""
+    url = f"https://www.nytimes.com/svc/wordle/v2/{puzzle_date.isoformat()}.json"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "wordlebot"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return data.get("solution")
+    except Exception as e:
+        logging.warning(f"Could not fetch Wordle answer for {puzzle_date}: {e}")
+        return None
 
 
 def lookup_user_by_name(name: str) -> str | None:
@@ -668,9 +690,14 @@ def schedule_daily_tasks():
         now = datetime.now()
 
         if event_type == "morning":
+            nudge = random.choice(MORNING_NUDGES)
+            yesterday = (now - timedelta(days=1)).date()
+            answer = fetch_wordle_answer(yesterday)
+            if answer:
+                nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
             app.client.chat_postMessage(
                 channel=channel_id,
-                text=random.choice(MORNING_NUDGES),
+                text=nudge,
             )
 
         elif event_type == "evening":

@@ -70,6 +70,7 @@ build_hardest_puzzles = _test_globals["build_hardest_puzzles"]
 build_shame_list = _test_globals["build_shame_list"]
 get_active_players = _test_globals["get_active_players"]
 check_rivalry = _test_globals["check_rivalry"]
+fetch_wordle_answer = _test_globals["fetch_wordle_answer"]
 rank_icon = _test_globals["rank_icon"]
 
 
@@ -321,6 +322,19 @@ class TestTiedRankings(unittest.TestCase):
         lb = build_leaderboard(scores, days=7)
         self.assertEqual(lb.count("🥇"), 1)
         self.assertEqual(lb.count("🥈"), 1)
+
+
+class TestFetchWordleAnswer(unittest.TestCase):
+    def test_fetches_known_date(self):
+        from datetime import date
+        answer = fetch_wordle_answer(date(2026, 3, 12))
+        self.assertIsNotNone(answer)
+        self.assertEqual(answer, "smell")
+
+    def test_returns_none_on_invalid_date(self):
+        from datetime import date
+        answer = fetch_wordle_answer(date(1999, 1, 1))
+        self.assertIsNone(answer)
 
 
 class TestGetActivePlayers(unittest.TestCase):
