@@ -211,12 +211,12 @@ def check_streak(scores: dict, user_id: str) -> str | None:
         key = "streak_epic" if current >= 14 else "streak_hot"
         templates = COMMENTARY.get(key, [])
         if templates:
-            return f"🔥 <@{user_id}> — " + random.choice(templates).format(streak=current)
+            return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> is on a *{current}-day streak*!"
     if current == 3:
         templates = COMMENTARY.get("streak_building", [])
         if templates:
-            return f"🔥 <@{user_id}> — " + random.choice(templates).format(streak=current)
+            return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> — 3-day streak going!"
     return None
 
@@ -235,12 +235,12 @@ def check_hot_cold(scores: dict, user_id: str) -> str | None:
     if diff >= 1.0:
         templates = COMMENTARY.get("hot_hand", [])
         if templates:
-            return f"📈 <@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
+            return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📈 <@{user_id}> is heating up — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     if diff <= -1.0:
         templates = COMMENTARY.get("cold_spell", [])
         if templates:
-            return f"📉 <@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
+            return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📉 <@{user_id}> going through it — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     return None
 
@@ -602,12 +602,12 @@ def check_comeback(scores: dict, user_id: str, puzzle_num: str) -> str | None:
     if prev >= 6 and curr <= 3:
         templates = COMMENTARY.get("comeback_strong", [])
         if templates:
-            return "📈 " + random.choice(templates).format(prev_score=prev_str, score=curr_str)
+            return random.choice(templates).format(prev_score=prev_str, score=curr_str)
         return f"📈 comeback! {prev_str}/6 → {curr_str}/6"
     if prev >= 5 and curr < prev:
         templates = COMMENTARY.get("comeback_ok", [])
         if templates:
-            return "📈 " + random.choice(templates).format(prev_score=prev_str, score=curr_str)
+            return random.choice(templates).format(prev_score=prev_str, score=curr_str)
     return None
 
 
@@ -628,7 +628,7 @@ def check_personal_best(scores: dict, user_id: str) -> str | None:
     if current < min(recent):
         templates = COMMENTARY.get("personal_best", [])
         if templates:
-            return "🏅 " + random.choice(templates).format(games=len(recent))
+            return random.choice(templates).format(games=len(recent))
         return f"🏅 best score in {len(recent)} games!"
     return None
 
