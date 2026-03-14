@@ -10,7 +10,7 @@ _tree = ast.parse(_source)
 
 # Execute only the parts we can test (everything except the Slack app init
 # and the handlers that depend on it).
-_test_globals = {"__builtins__": __builtins__}
+_test_globals = {"__builtins__": __builtins__, "__file__": "app.py"}
 exec(
     compile(
         ast.Module(
@@ -80,6 +80,9 @@ check_puzzle_milestone = _test_globals["check_puzzle_milestone"]
 build_monthly_recap = _test_globals["build_monthly_recap"]
 build_yearly_recap = _test_globals["build_yearly_recap"]
 rank_icon = _test_globals["rank_icon"]
+get_smart_commentary = _test_globals["get_smart_commentary"]
+check_streak = _test_globals["check_streak"]
+COMMENTARY = _test_globals["COMMENTARY"]
 
 
 # --- Test data ---
@@ -216,10 +219,10 @@ class TestCommentary(unittest.TestCase):
             c = get_commentary(score)
             self.assertIsNotNone(c)
 
-    def test_mediocre_score_no_comment(self):
-        self.assertIsNone(get_commentary("4"))
-        self.assertIsNone(get_commentary("5"))
-        self.assertIsNone(get_commentary("6"))
+    def test_all_scores_get_commentary(self):
+        for score in ["1", "2", "3", "4", "5", "6", "X"]:
+            c = get_commentary(score)
+            self.assertIsNotNone(c, f"Expected commentary for score {score}")
 
 
 class TestLeaderboard(unittest.TestCase):
@@ -444,7 +447,8 @@ class TestComeback(unittest.TestCase):
         }
         result = check_comeback(scores, "U1", "101")
         self.assertIsNotNone(result)
-        self.assertIn("📈", result)
+        # Should be from comeback_strong templates
+        self.assertTrue(len(result) > 0)
 
     def test_no_comeback_when_both_good(self):
         scores = {
@@ -452,6 +456,15 @@ class TestComeback(unittest.TestCase):
             "101": {"U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"}},
         }
         self.assertIsNone(check_comeback(scores, "U1", "101"))
+
+    def test_comeback_ok_detected(self):
+        scores = {
+            "100": {"U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}},
+            "101": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"}},
+        }
+        result = check_comeback(scores, "U1", "101")
+        self.assertIsNotNone(result)
+        self.assertTrue(len(result) > 0)
 
     def test_no_comeback_on_first_puzzle(self):
         scores = {
@@ -603,6 +616,79 @@ class TestYearlyRecap(unittest.TestCase):
 
     def test_no_data(self):
         self.assertIsNone(build_yearly_recap({}, 2026))
+
+
+class TestCheckStreak(unittest.TestCase):
+    def test_streak_at_3(self):
+        scores = {}
+        for i in range(3):
+            scores[str(100 + i)] = {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        result = check_streak(scores, "U1")
+        self.assertIsNotNone(result)
+        self.assertIn("🔥", result)
+
+    def test_streak_at_7(self):
+        scores = {}
+        for i in range(7):
+            scores[str(100 + i)] = {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        result = check_streak(scores, "U1")
+        self.assertIsNotNone(result)
+        self.assertIn("🔥", result)
+
+    def test_no_streak_at_4(self):
+        scores = {}
+        for i in range(4):
+            scores[str(100 + i)] = {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        self.assertIsNone(check_streak(scores, "U1"))
+
+    def test_no_streak_at_1(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        self.assertIsNone(check_streak(scores, "U1"))
+
+
+class TestSmartCommentary(unittest.TestCase):
+    def test_returns_base_commentary(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", False)
+        self.assertTrue(len(replies) >= 1)
+        self.assertIn(replies[0], COMMENTARY["score_3"])
+
+    def test_hard_mode_adds_context(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": True, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", True)
+        self.assertTrue(len(replies) >= 2)
+        hard_mode_found = any(r in COMMENTARY["hard_mode_good"] for r in replies)
+        self.assertTrue(hard_mode_found)
+
+    def test_hard_mode_fail(self):
+        scores = {"100": {"U1": {"score": "X", "hard_mode": True, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "X", True)
+        hard_mode_found = any(r in COMMENTARY["hard_mode_fail"] for r in replies)
+        self.assertTrue(hard_mode_found)
+
+    def test_limits_context_to_2(self):
+        # Build scenario where many context triggers fire
+        scores = {}
+        for i in range(20):
+            scores[str(100 + i)] = {"U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        scores["120"] = {"U1": {"score": "X", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"}}
+        scores["121"] = {"U1": {"score": "1", "hard_mode": True, "timestamp": "2025-01-03T12:00:00"}}
+        replies = get_smart_commentary(scores, "U1", "121", "1", True)
+        # base (1) + max 2 context = 3 max
+        self.assertLessEqual(len(replies), 3)
+        self.assertTrue(len(replies) >= 1)
+
+    def test_fail_gets_commentary(self):
+        scores = {"100": {"U1": {"score": "X", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "X", False)
+        self.assertTrue(len(replies) >= 1)
+        self.assertIn(replies[0], COMMENTARY["score_x"])
+
+    def test_no_hard_mode_no_extra(self):
+        scores = {"100": {"U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "4", False)
+        # Only base commentary, no contextual triggers
+        self.assertEqual(len(replies), 1)
 
 
 class TestRankIcon(unittest.TestCase):

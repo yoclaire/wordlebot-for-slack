@@ -1,0 +1,298 @@
+{
+  "score_1": [
+    "🤯 WHAT. first try?! are you cheating?",
+    "🚨 literally impossible. we're calling the authorities.",
+    "☝️ one guess. ONE. explain yourself.",
+    "😳 excuse me what",
+    "👀 did you just... on the first try?",
+    "🚔 that's illegal in most countries.",
+    "😨 i'm not even impressed, i'm scared.",
+    "🙇 ladies and gentlemen, a god walks among us.",
+    "🎰 was that skill or did you just guess the vibes?",
+    "🧠 the neurons are firing today.",
+    "💀 you killed that word on sight.",
+    "🦄 a unicorn solve. majestic and rare.",
+    "📸 screenshot this. nobody will believe you.",
+    "⚡ one and done. lightning in a bottle."
+  ],
+  "score_2": [
+    "🔥 two?! disgusting talent.",
+    "💅 ok show-off, we see you.",
+    "😎 casual two. no big deal. (it's a big deal.)",
+    "⚡ two guesses and done. terrifying efficiency.",
+    "🎯 that second guess was personal.",
+    "👊 looked it dead in the eye and said 'i own you.'",
+    "✌️ two. like it was nothing.",
+    "🧊 ice cold. two guesses. no hesitation.",
+    "🏹 second arrow, bullseye.",
+    "🧬 is this a natural ability or were you trained?",
+    "🤌 *chef's kiss* on that second guess.",
+    "💨 blink and you'd miss it. two and out."
+  ],
+  "score_3": [
+    "✅ clean solve.",
+    "🎯 smooth. very smooth.",
+    "🤌 chef's kiss.",
+    "📐 textbook three. nothing wasted.",
+    "🔪 efficient. clinical. devastating.",
+    "✨ three and out. that's how it's done.",
+    "💚 the ideal wordle. you love to see it.",
+    "🧹 swept that one up in three. tidy.",
+    "🎳 three-frame strike.",
+    "🎻 played that word like a fiddle.",
+    "👌 that's the good stuff right there.",
+    "📖 by the book. love to see it."
+  ],
+  "score_4": [
+    "👍 solid four.",
+    "⚾ right down the middle. dependable.",
+    "🤝 nothing flashy, nothing wrong.",
+    "🧱 steady hands.",
+    "💪 the wordle equivalent of a base hit.",
+    "🏠 safe and sound in four.",
+    "📊 four is the backbone of a good average.",
+    "🎯 got there in the end. no drama.",
+    "🛠️ workmanlike. effective.",
+    "☕ four guesses and a job well done.",
+    "🟩 green on four. we'll take it."
+  ],
+  "score_5": [
+    "😅 cutting it close there.",
+    "🫠 five is fine. five is fine.",
+    "😬 had us in the first half ngl.",
+    "💦 sweaty palms on guess five?",
+    "🏁 a win's a win. barely.",
+    "🎢 that was a rollercoaster.",
+    "😮‍💨 five. we got there. eventually.",
+    "🐌 slow and steady wins the... well, you won.",
+    "🧗 uphill battle but you made it.",
+    "🪂 pulled the ripcord just in time.",
+    "🫣 i couldn't watch after guess three.",
+    "🎬 the tension was palpable."
+  ],
+  "score_6": [
+    "😱 living on the edge.",
+    "🦷 by the skin of your teeth.",
+    "🎬 that was a movie and you know it.",
+    "🎭 six guesses? that's called a thriller.",
+    "🏃 you saw the light at the end of the tunnel and sprinted.",
+    "⏳ the literal last chance and you took it.",
+    "🦸 guess six hero. the most stressful kind of hero.",
+    "😰 i aged ten years watching that.",
+    "🪫 running on fumes but you made it.",
+    "🎰 that last guess was pure faith.",
+    "💔 six. my heart can't take this.",
+    "🧊 ice in the veins on guess six.",
+    "🎪 the circus, but you stuck the landing.",
+    "🫡 a salute to the guess six survivors."
+  ],
+  "score_x": [
+    "💔 oof. at least you tried.",
+    "🥊 the word fought back today, huh?",
+    "🤫 we don't talk about this one.",
+    "🙃 the important thing is you had fun. right?",
+    "🪦 F in the chat.",
+    "🧩 have you considered connections instead?",
+    "⚰️ rest in peace.",
+    "🌅 tomorrow's a new day.",
+    "⛈️ the wordle gods were not kind.",
+    "7️⃣ seven guesses would've been nice huh.",
+    "😬 it happens to the best of us. and also to you.",
+    "🫠 the word won today. respect the word.",
+    "🕳️ sometimes the void stares back.",
+    "📉 we'll pretend this didn't happen.",
+    "🧊 frozen out. the letters weren't cooperating.",
+    "🎻 world's smallest violin for this one.",
+    "😤 that word had no business being that hard.",
+    "🪦 gone but not forgotten. jk we're forgetting this immediately."
+  ],
+
+  "hard_mode_good": [
+    "⭐ hard mode and still crushed it. built different.",
+    "⭐ hard mode flex. respect.",
+    "⭐ hard mode? on this word? ok.",
+    "⭐ hard mode and made it look easy.",
+    "⭐ hard mode is supposed to be hard. you didn't get the memo.",
+    "⭐ the asterisk of champions.",
+    "⭐ hard mode with room to spare. menacing."
+  ],
+  "hard_mode_survive": [
+    "⭐ hard mode and survived. barely.",
+    "⭐ hard mode added at least two guesses to that.",
+    "⭐ hard mode was bold today. but you lived.",
+    "⭐ the asterisk of pain. but you earned it.",
+    "⭐ hard mode really tested you today huh.",
+    "⭐ hard mode: suffering, but make it voluntary."
+  ],
+  "hard_mode_fail": [
+    "⭐ hard mode X. went down swinging.",
+    "⭐ hard mode was a choice today. a bad one.",
+    "⭐ hard mode said 'no.' loudly.",
+    "⭐ hard mode giveth and hard mode taketh.",
+    "⭐ that asterisk is doing a lot of heavy lifting on this X.",
+    "⭐ brave. foolish. but brave."
+  ],
+
+  "comeback_strong": [
+    "🔄 redemption arc. {prev_score}/6 to {score}/6.",
+    "📈 bounced back from that {prev_score}/6 real quick.",
+    "🌅 yesterday was a bad dream. today you woke up.",
+    "⚔️ the revenge game. {prev_score}/6 to {score}/6.",
+    "💪 ok that's more like it. yesterday didn't happen.",
+    "🔥 {prev_score}/6 to {score}/6. that's a whole different person.",
+    "🦅 rose from the ashes of that {prev_score}/6.",
+    "🎬 the sequel is always better. {prev_score}/6 ➜ {score}/6."
+  ],
+  "comeback_ok": [
+    "📈 better than yesterday at least.",
+    "🔄 improvement! we'll take it after that {prev_score}/6.",
+    "👣 shook off yesterday's {prev_score}/6. progress.",
+    "📊 trending in the right direction after that {prev_score}/6.",
+    "🌤️ sunnier than yesterday. we'll take it."
+  ],
+
+  "streak_building": [
+    "🔥 {streak}-day streak. building momentum.",
+    "🔥 {streak} in a row. don't stop now.",
+    "🔥 that's {streak} straight. keep it rolling.",
+    "🔥 {streak} days running. the streak is young.",
+    "🔥 {streak} and counting. something's brewing."
+  ],
+  "streak_hot": [
+    "🔥 {streak}-day streak! a whole week of wordle.",
+    "🔥 {streak} days straight. machine.",
+    "🔥 {streak}-day streak. this is getting serious.",
+    "🔥 {streak} in a row. don't jinx it.",
+    "🔥 {streak} days. that's commitment.",
+    "🔥 {streak}-day streak. the vibes are immaculate."
+  ],
+  "streak_epic": [
+    "🔥 {streak}-day streak. at this point you're just showing off.",
+    "🔥 {streak} days. legends are made of less.",
+    "🔥 {streak}-day streak. do you even take days off?",
+    "🔥 {streak} consecutive puzzles. that's not a streak, that's a lifestyle.",
+    "🔥 {streak} days. the wordle can't stop you. nothing can stop you.",
+    "🔥 {streak}-day streak. they should name a wordle after you.",
+    "🔥 {streak} straight. at what point do we call this an addiction?",
+    "🔥 {streak} days. your dedication is both inspiring and slightly concerning."
+  ],
+
+  "leading": [
+    "👑 sitting at #1 and they know it.",
+    "🏔️ top of the mountain. view's nice up here.",
+    "🎯 the one to beat.",
+    "👑 still on top. must be nice.",
+    "🥇 front of the pack. comfortable.",
+    "👑 the crown sits heavy. jk, it looks great on you."
+  ],
+  "leading_dominant": [
+    "👑 at this point you're just farming the rest of us.",
+    "🏳️ is there a mercy rule in wordle?",
+    "👑 #1 with room to spare. scary.",
+    "🚀 leaving everyone in the dust.",
+    "👑 it's not a competition anymore. it's a showcase."
+  ],
+  "trailing": [
+    "💪 building character.",
+    "📅 it's a long season.",
+    "⬆️ nowhere to go but up.",
+    "🌱 growth is a process. a slow, painful process.",
+    "🏗️ every champion has a rough chapter.",
+    "🐢 slow and steady. emphasis on slow."
+  ],
+
+  "hot_hand": [
+    "🔥 heating up — *{recent_avg:.1f}* avg lately vs *{overall_avg:.1f}* career.",
+    "🔥 on fire. *{recent_avg:.1f}* over the last 5 vs *{overall_avg:.1f}* overall.",
+    "🔥 something clicked. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* career.",
+    "📈 locked in. *{recent_avg:.1f}* lately vs *{overall_avg:.1f}* career avg.",
+    "🎯 dialed in. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall.",
+    "⚡ surging. *{recent_avg:.1f}* avg over last 5 vs *{overall_avg:.1f}* career."
+  ],
+  "cold_spell": [
+    "🥶 going through it — *{recent_avg:.1f}* avg lately vs *{overall_avg:.1f}* career.",
+    "📉 rough stretch. *{recent_avg:.1f}* over the last 5 vs *{overall_avg:.1f}* overall.",
+    "🌧️ cold run. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* career. it'll turn around.",
+    "😤 *{recent_avg:.1f}* avg lately vs *{overall_avg:.1f}* career. the vibes are off.",
+    "🫠 struggling. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall. we believe in you.",
+    "📉 *{recent_avg:.1f}* over the last 5 vs *{overall_avg:.1f}* career. slump happens."
+  ],
+
+  "close_call_on_streak": [
+    "😮‍💨 streak lives! barely. {streak} days and counting.",
+    "🫣 6/6 but the streak survives. {streak} days.",
+    "😰 that was a scare. streak holds at {streak}.",
+    "🪂 the streak almost died today. {streak} days by a thread.",
+    "💓 {streak}-day streak has a pulse. barely.",
+    "🧊 nerves of steel. {streak}-day streak survives a 6/6."
+  ],
+
+  "personal_best": [
+    "🏅 best score in {games} games!",
+    "🏅 new personal best! hasn't done that in {games} games.",
+    "🏅 peak performance. best in {games} games.",
+    "🏅 that's the best in {games} games. new high water mark.",
+    "🏅 personal record! top score across the last {games} games.",
+    "🏅 {games} games and this is the best one yet."
+  ],
+
+  "beat_rival": [
+    "⚔️ got one over on <@{rival}> today.",
+    "😏 <@{rival}> won't like seeing this one.",
+    "🏆 head to head, that's a W over <@{rival}>.",
+    "👀 <@{rival}> is typing...",
+    "📣 scoreboard, <@{rival}>. scoreboard."
+  ],
+
+  "morning_nudges": [
+    "🟩 new wordle just dropped. you know what to do.",
+    "☀️ rise and wordle.",
+    "🤫 today's wordle is live. no spoilers.",
+    "🌅 good morning! the wordle awaits: https://www.nytimes.com/games/wordle/",
+    "🟩 another day, another wordle. let's see what you've got.",
+    "🎯 five letters. six guesses. no excuses.",
+    "⬜ the grid awaits. don't keep it waiting.",
+    "⏰ wordle o'clock. you know the drill.",
+    "🔍 today's wordle is out there. go find it.",
+    "💪 time to flex. wordle's up.",
+    "📬 your daily wordle has arrived.",
+    "🌤️ rise, shine, wordle.",
+    "🔤 the letters aren't gonna guess themselves.",
+    "🆚 you vs five letters. who wins today?",
+    "🌱 fresh puzzle, fresh start.",
+    "♟️ the board is set. make your move.",
+    "🧠 your brain called. it wants a wordle.",
+    "🟨 somewhere out there, five letters are waiting for you.",
+    "☕ coffee and wordle. the morning ritual.",
+    "🫡 reporting for wordle duty.",
+    "🗞️ the daily puzzle is served.",
+    "🎲 today's five letters aren't going to guess themselves.",
+    "⬛ twenty-six letters. five of them are the answer. go."
+  ],
+
+  "shame": [
+    "👀 still waiting on {names} to post today...",
+    "📢 hey {names} — the wordle isn't going to solve itself",
+    "😐 {names}: we're not mad, just disappointed",
+    "⏰ the clock is ticking, {names}",
+    "🫤 {names} — everyone else managed to find five minutes today",
+    "🔍 conspicuously absent: {names}",
+    "⏳ {names}: the wordle waits for no one. except right now, apparently",
+    "📭 {names}: your wordle is overdue.",
+    "🦗 *crickets* from {names}",
+    "🪑 {names}: your seat at the wordle table is getting cold",
+    "📋 roll call! {names} still unaccounted for",
+    "🕵️ has anyone checked on {names}?"
+  ],
+
+  "all_played": [
+    "🎉 Everyone's in! Let's see how you all did.",
+    "✅ That's everyone! Time for the results.",
+    "📋 All accounted for. Let's get to it.",
+    "🏁 Last one's in — here's how it shook out.",
+    "🃏 Full house! Results incoming.",
+    "🎬 And... scene. Everyone's played. Roll the stats.",
+    "📊 All votes are in. Let's count 'em up.",
+    "🔔 Ding ding ding. Everyone's played. To the tape!"
+  ]
+}
