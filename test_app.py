@@ -71,6 +71,14 @@ build_shame_list = _test_globals["build_shame_list"]
 get_active_players = _test_globals["get_active_players"]
 check_rivalry = _test_globals["check_rivalry"]
 fetch_wordle_answer = _test_globals["fetch_wordle_answer"]
+build_sparkline = _test_globals["build_sparkline"]
+check_comeback = _test_globals["check_comeback"]
+check_personal_best = _test_globals["check_personal_best"]
+check_group_records = _test_globals["check_group_records"]
+get_group_streak = _test_globals["get_group_streak"]
+check_puzzle_milestone = _test_globals["check_puzzle_milestone"]
+build_monthly_recap = _test_globals["build_monthly_recap"]
+build_yearly_recap = _test_globals["build_yearly_recap"]
 rank_icon = _test_globals["rank_icon"]
 
 
@@ -415,6 +423,186 @@ class TestRivalry(unittest.TestCase):
         }
         rivalry = check_rivalry(scores)
         self.assertIsNone(rivalry)
+
+
+class TestSparkline(unittest.TestCase):
+    def test_basic_sparkline(self):
+        self.assertEqual(build_sparkline([1, 3, 5, 7]), "▁▃▅█")
+
+    def test_single_score(self):
+        self.assertEqual(build_sparkline([4]), "▄")
+
+    def test_all_same(self):
+        self.assertEqual(build_sparkline([3, 3, 3]), "▃▃▃")
+
+
+class TestComeback(unittest.TestCase):
+    def test_comeback_detected(self):
+        scores = {
+            "100": {"U1": {"score": "X", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}},
+            "101": {"U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"}},
+        }
+        result = check_comeback(scores, "U1", "101")
+        self.assertIsNotNone(result)
+        self.assertIn("📈", result)
+
+    def test_no_comeback_when_both_good(self):
+        scores = {
+            "100": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}},
+            "101": {"U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"}},
+        }
+        self.assertIsNone(check_comeback(scores, "U1", "101"))
+
+    def test_no_comeback_on_first_puzzle(self):
+        scores = {
+            "100": {"U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}},
+        }
+        self.assertIsNone(check_comeback(scores, "U1", "100"))
+
+
+class TestPersonalBest(unittest.TestCase):
+    def test_personal_best_detected(self):
+        scores = {}
+        # 10 games of 4s, then a 2
+        for i in range(10):
+            scores[str(100 + i)] = {"U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        scores["110"] = {"U1": {"score": "2", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        result = check_personal_best(scores, "U1")
+        self.assertIsNotNone(result)
+        self.assertIn("🏅", result)
+
+    def test_no_personal_best_when_normal(self):
+        scores = {}
+        for i in range(10):
+            scores[str(100 + i)] = {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        scores["110"] = {"U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}
+        self.assertIsNone(check_personal_best(scores, "U1"))
+
+    def test_not_enough_games(self):
+        scores = {
+            "100": {"U1": {"score": "1", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}},
+        }
+        self.assertIsNone(check_personal_best(scores, "U1"))
+
+
+class TestGroupRecords(unittest.TestCase):
+    def test_best_group_record(self):
+        scores = {}
+        for i in range(5):
+            scores[str(100 + i)] = {
+                "U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        # Latest puzzle has best group average
+        scores["105"] = {
+            "U1": {"score": "1", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+            "U2": {"score": "2", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+        }
+        result = check_group_records(scores)
+        self.assertIsNotNone(result)
+        self.assertIn("record", result.lower())
+
+    def test_no_record_when_average(self):
+        scores = {}
+        for i in range(6):
+            scores[str(100 + i)] = {
+                "U1": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        self.assertIsNone(check_group_records(scores))
+
+    def test_not_enough_history(self):
+        scores = {
+            "100": {
+                "U1": {"score": "1", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "1", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        self.assertIsNone(check_group_records(scores))
+
+
+class TestGroupStreak(unittest.TestCase):
+    def test_full_participation_streak(self):
+        scores = {}
+        for i in range(5):
+            scores[str(100 + i)] = {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        self.assertEqual(get_group_streak(scores), 5)
+
+    def test_broken_streak(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            },
+            "101": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
+            },
+            "102": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-03T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-03T12:05:00"},
+            },
+        }
+        # Latest puzzle (102) has both, but 101 is missing U2
+        self.assertEqual(get_group_streak(scores), 1)
+
+    def test_empty_scores(self):
+        self.assertEqual(get_group_streak({}), 0)
+
+
+class TestPuzzleMilestone(unittest.TestCase):
+    def test_century_milestone(self):
+        result = check_puzzle_milestone("1800")
+        self.assertIsNotNone(result)
+        self.assertIn("1800", result)
+
+    def test_major_milestone(self):
+        result = check_puzzle_milestone("2000")
+        self.assertIsNotNone(result)
+        self.assertIn("milestone", result.lower())
+
+    def test_not_a_milestone(self):
+        self.assertIsNone(check_puzzle_milestone("1728"))
+
+
+class TestMonthlyRecap(unittest.TestCase):
+    def test_builds_recap(self):
+        # Puzzle numbers for March 2026: days since 2021-06-19
+        # March 1, 2026 = day 1716, March 31, 2026 = day 1746
+        scores = {}
+        for i in range(1716, 1726):
+            scores[str(i)] = {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2026-03-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2026-03-01T12:05:00"},
+            }
+        recap = build_monthly_recap(scores, 2026, 3)
+        self.assertIsNotNone(recap)
+        self.assertIn("March", recap)
+        self.assertIn("Champion", recap)
+
+    def test_no_data(self):
+        self.assertIsNone(build_monthly_recap({}, 2026, 3))
+
+
+class TestYearlyRecap(unittest.TestCase):
+    def test_builds_recap(self):
+        # Use puzzle numbers that fall in 2026
+        scores = {}
+        for i in range(1657, 1677):  # ~Jan 2026
+            scores[str(i)] = {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2026-01-01T12:00:00"},
+                "U2": {"score": "5", "hard_mode": False, "timestamp": "2026-01-01T12:05:00"},
+            }
+        recap = build_yearly_recap(scores, 2026)
+        self.assertIsNotNone(recap)
+        self.assertIn("2026", recap)
+        self.assertIn("Player of the Year", recap)
+        self.assertIn("Most consistent", recap)
+
+    def test_no_data(self):
+        self.assertIsNone(build_yearly_recap({}, 2026))
 
 
 class TestRankIcon(unittest.TestCase):
