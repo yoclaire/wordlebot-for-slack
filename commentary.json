@@ -1,0 +1,197 @@
+{
+  "score_1": [
+    "WHAT. first try?! are you cheating?",
+    "literally impossible. we're calling the authorities.",
+    "one guess. ONE. explain yourself.",
+    "excuse me what",
+    "did you just... on the first try?",
+    "that's illegal in most countries.",
+    "i'm not even impressed, i'm scared.",
+    "ladies and gentlemen, a god walks among us."
+  ],
+  "score_2": [
+    "two?! disgusting talent.",
+    "ok show-off, we see you.",
+    "casual two. no big deal. (it's a big deal.)",
+    "two guesses and done. terrifying efficiency.",
+    "that second guess was personal.",
+    "looked it dead in the eye and said 'i own you.'",
+    "two. like it was nothing."
+  ],
+  "score_3": [
+    "clean solve.",
+    "smooth. very smooth.",
+    "chef's kiss.",
+    "textbook three. nothing wasted.",
+    "efficient. clinical. devastating.",
+    "three and out. that's how it's done.",
+    "the ideal wordle. you love to see it."
+  ],
+  "score_4": [
+    "solid four.",
+    "right down the middle. dependable.",
+    "nothing flashy, nothing wrong.",
+    "steady hands.",
+    "the wordle equivalent of a base hit."
+  ],
+  "score_5": [
+    "cutting it close there.",
+    "five is fine. five is fine.",
+    "had us in the first half ngl.",
+    "sweaty palms on guess five?",
+    "a win's a win. barely."
+  ],
+  "score_6": [
+    "living on the edge.",
+    "by the skin of your teeth.",
+    "that was a movie and you know it.",
+    "six guesses? that's called a thriller.",
+    "you saw the light at the end of the tunnel and sprinted.",
+    "the literal last chance and you took it.",
+    "guess six hero. the most stressful kind of hero."
+  ],
+  "score_x": [
+    "oof. at least you tried.",
+    "the word fought back today, huh?",
+    "we don't talk about this one.",
+    "the important thing is you had fun. right?",
+    "F in the chat.",
+    "have you considered connections instead?",
+    "rest in peace.",
+    "tomorrow's a new day.",
+    "the wordle gods were not kind.",
+    "seven guesses would've been nice huh.",
+    "it happens to the best of us. and also to you."
+  ],
+
+  "hard_mode_good": [
+    "hard mode and still crushed it. built different.",
+    "hard mode flex. respect.",
+    "hard mode? on this word? ok.",
+    "hard mode and made it look easy."
+  ],
+  "hard_mode_survive": [
+    "hard mode and survived. barely.",
+    "hard mode added at least two guesses to that.",
+    "hard mode was bold today. but you lived."
+  ],
+  "hard_mode_fail": [
+    "hard mode X. went down swinging.",
+    "hard mode was a choice today. a bad one.",
+    "hard mode said 'no.' loudly."
+  ],
+
+  "comeback_strong": [
+    "redemption arc. {prev_score}/6 to {score}/6.",
+    "bounced back from that {prev_score}/6 real quick.",
+    "yesterday was a bad dream. today you woke up.",
+    "the revenge game. {prev_score}/6 to {score}/6.",
+    "ok that's more like it. yesterday didn't happen."
+  ],
+  "comeback_ok": [
+    "better than yesterday at least.",
+    "improvement! we'll take it after that {prev_score}/6.",
+    "shook off yesterday's {prev_score}/6. progress."
+  ],
+
+  "streak_building": [
+    "{streak}-day streak. building momentum.",
+    "{streak} in a row. don't stop now.",
+    "that's {streak} straight. keep it rolling."
+  ],
+  "streak_hot": [
+    "{streak}-day streak! a whole week of wordle.",
+    "{streak} days straight. machine.",
+    "{streak}-day streak. this is getting serious."
+  ],
+  "streak_epic": [
+    "{streak}-day streak. at this point you're just showing off.",
+    "{streak} days. legends are made of less.",
+    "{streak}-day streak. do you even take days off?",
+    "{streak} consecutive puzzles. that's not a streak, that's a lifestyle."
+  ],
+
+  "leading": [
+    "sitting at #1 and they know it.",
+    "top of the mountain. view's nice up here.",
+    "the one to beat.",
+    "still on top. must be nice."
+  ],
+  "leading_dominant": [
+    "at this point you're just farming the rest of us.",
+    "is there a mercy rule in wordle?",
+    "#1 with room to spare. scary."
+  ],
+  "trailing": [
+    "building character.",
+    "it's a long season.",
+    "nowhere to go but up.",
+    "growth is a process. a slow, painful process."
+  ],
+
+  "hot_hand": [
+    "heating up — *{recent_avg:.1f}* avg lately vs *{overall_avg:.1f}* career.",
+    "on fire. *{recent_avg:.1f}* over the last 5 vs *{overall_avg:.1f}* overall.",
+    "something clicked. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* career."
+  ],
+  "cold_spell": [
+    "going through it — *{recent_avg:.1f}* avg lately vs *{overall_avg:.1f}* career.",
+    "rough stretch. *{recent_avg:.1f}* over the last 5 vs *{overall_avg:.1f}* overall.",
+    "cold run. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* career. it'll turn around."
+  ],
+
+  "close_call_on_streak": [
+    "streak lives! barely. {streak} days and counting.",
+    "6/6 but the streak survives. {streak} days.",
+    "that was a scare. streak holds at {streak}."
+  ],
+
+  "personal_best": [
+    "best score in {games} games!",
+    "new personal best! hasn't done that in {games} games.",
+    "peak performance. best in {games} games."
+  ],
+
+  "beat_rival": [
+    "got one over on <@{rival}> today.",
+    "<@{rival}> won't like seeing this one.",
+    "head to head, that's a W over <@{rival}>."
+  ],
+
+  "morning_nudges": [
+    "new wordle just dropped. you know what to do.",
+    "rise and wordle.",
+    "today's wordle is live. no spoilers.",
+    "good morning! the wordle awaits: https://www.nytimes.com/games/wordle/",
+    "another day, another wordle. let's see what you've got.",
+    "five letters. six guesses. no excuses.",
+    "the grid awaits. don't keep it waiting.",
+    "wordle o'clock. you know the drill.",
+    "today's wordle is out there. go find it.",
+    "time to flex. wordle's up.",
+    "your daily wordle has arrived.",
+    "rise, shine, wordle.",
+    "the letters aren't gonna guess themselves.",
+    "you vs five letters. who wins today?",
+    "fresh puzzle, fresh start.",
+    "the board is set. make your move."
+  ],
+
+  "shame": [
+    "still waiting on {names} to post today...",
+    "hey {names} — the wordle isn't going to solve itself",
+    "{names}: we're not mad, just disappointed",
+    "the clock is ticking, {names}",
+    "{names} — everyone else managed to find five minutes today",
+    "conspicuously absent: {names}",
+    "{names}: the wordle waits for no one. except right now, apparently"
+  ],
+
+  "all_played": [
+    "Everyone's in! Let's see how you all did.",
+    "That's everyone! Time for the results.",
+    "All accounted for. Let's get to it.",
+    "Last one's in — here's how it shook out.",
+    "Full house! Results incoming."
+  ]
+}

@@ -35,33 +35,9 @@ HARD_MODE_RE = re.compile(r"Wordle\s+[\d,]+\s+[X1-6]/6\*", re.IGNORECASE)
 
 RANK_ICONS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 
-ROASTS = [
-    "oof. at least you tried.",
-    "the word fought back today, huh?",
-    "we don't talk about this one.",
-    "technically still a win... technically.",
-    "the important thing is you had fun. right?",
-    "F in the chat.",
-    "have you considered connections instead?",
-]
-
-CELEBRATIONS = {
-    "1": [
-        "WHAT. first try?! are you cheating?",
-        "literally impossible. we're calling the authorities.",
-        "one guess. ONE. explain yourself.",
-    ],
-    "2": [
-        "two?! disgusting talent.",
-        "ok show-off, we see you.",
-        "casual two. no big deal. (it's a big deal.)",
-    ],
-    "3": [
-        "clean solve.",
-        "smooth. very smooth.",
-        "chef's kiss.",
-    ],
-}
+# Load commentary templates from external file
+COMMENTARY_FILE = Path(__file__).parent / "commentary.json"
+COMMENTARY = json.loads(COMMENTARY_FILE.read_text()) if COMMENTARY_FILE.exists() else {}
 
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
 
@@ -77,28 +53,6 @@ ACHIEVEMENTS = {
     "hard_mode_10": ("⭐ Hard Mode Hero", "10 hard mode games"),
     "no_fails_20": ("🛡️ Flawless", "20 games without an X"),
 }
-
-SHAME_MESSAGES = [
-    "still waiting on {names} to post today... 👀",
-    "hey {names} — the wordle isn't going to solve itself",
-    "{names}: we're not mad, just disappointed",
-    "the clock is ticking, {names}",
-]
-
-MORNING_NUDGES = [
-    "☕ new wordle just dropped. you know what to do.",
-    "🌅 rise and wordle.",
-    "📰 today's wordle is live. no spoilers.",
-    "good morning! the wordle awaits: https://www.nytimes.com/games/wordle/",
-    "🧩 another day, another wordle. let's see what you've got.",
-    "🔤 five letters. six guesses. no excuses.",
-    "🌄 the grid awaits. don't keep it waiting.",
-    "⏰ wordle o'clock. you know the drill.",
-    "🎯 today's wordle is out there. go find it.",
-    "🧠 time to flex. wordle's up.",
-    "📬 your daily wordle has arrived.",
-    "🪵 rise, shine, wordle.",
-]
 
 
 # --- Data helpers ---
@@ -238,11 +192,9 @@ def get_user_stats(scores: dict, user_id: str) -> dict | None:
 # --- Commentary & alerts ---
 
 def get_commentary(score: str) -> str | None:
-    if score == "X":
-        return random.choice(ROASTS)
-    if score in CELEBRATIONS:
-        return random.choice(CELEBRATIONS[score])
-    return None
+    key = f"score_{score}" if score != "X" else "score_x"
+    templates = COMMENTARY.get(key, [])
+    return random.choice(templates) if templates else None
 
 
 def check_milestone(scores: dict, user_id: str) -> str | None:
@@ -256,8 +208,15 @@ def check_streak(scores: dict, user_id: str) -> str | None:
     _, puzzles = get_user_scores(scores, user_id)
     current, _ = calc_streak(puzzles)
     if current >= 7 and current % 7 == 0:
+        key = "streak_epic" if current >= 14 else "streak_hot"
+        templates = COMMENTARY.get(key, [])
+        if templates:
+            return f"🔥 <@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> is on a *{current}-day streak*!"
     if current == 3:
+        templates = COMMENTARY.get("streak_building", [])
+        if templates:
+            return f"🔥 <@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> — 3-day streak going!"
     return None
 
@@ -274,9 +233,15 @@ def check_hot_cold(scores: dict, user_id: str) -> str | None:
     overall_avg = stats["avg"]
     diff = overall_avg - recent_avg
     if diff >= 1.0:
-        return f"📈 <@{user_id}> is on a hot streak — *{recent_avg:.1f}* avg over last 5 vs *{overall_avg:.1f}* overall"
+        templates = COMMENTARY.get("hot_hand", [])
+        if templates:
+            return f"📈 <@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
+        return f"📈 <@{user_id}> is heating up — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     if diff <= -1.0:
-        return f"📉 <@{user_id}> going through it — *{recent_avg:.1f}* avg over last 5 vs *{overall_avg:.1f}* overall"
+        templates = COMMENTARY.get("cold_spell", [])
+        if templates:
+            return f"📉 <@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
+        return f"📉 <@{user_id}> going through it — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     return None
 
 
@@ -606,7 +571,8 @@ def build_shame_list(scores: dict) -> str:
         return "Everyone's played today! 🎉"
 
     names = ", ".join(f"<@{uid}>" for uid in missing)
-    return random.choice(SHAME_MESSAGES).format(names=names)
+    templates = COMMENTARY.get("shame", ["{names}: play wordle already"])
+    return random.choice(templates).format(names=names)
 
 
 def build_sparkline(score_values: list[int]) -> str:
@@ -634,12 +600,14 @@ def check_comeback(scores: dict, user_id: str, puzzle_num: str) -> str | None:
     curr = 7 if curr_str == "X" else int(curr_str)
 
     if prev >= 6 and curr <= 3:
-        messages = [
-            f"📈 comeback! {prev_str}/6 → {curr_str}/6",
-            f"📈 redemption arc. {prev_str}/6 to {curr_str}/6.",
-            f"📈 bounced back from that {prev_str}/6 real quick.",
-        ]
-        return random.choice(messages)
+        templates = COMMENTARY.get("comeback_strong", [])
+        if templates:
+            return "📈 " + random.choice(templates).format(prev_score=prev_str, score=curr_str)
+        return f"📈 comeback! {prev_str}/6 → {curr_str}/6"
+    if prev >= 5 and curr < prev:
+        templates = COMMENTARY.get("comeback_ok", [])
+        if templates:
+            return "📈 " + random.choice(templates).format(prev_score=prev_str, score=curr_str)
     return None
 
 
@@ -658,8 +626,73 @@ def check_personal_best(scores: dict, user_id: str) -> str | None:
         return None
 
     if current < min(recent):
+        templates = COMMENTARY.get("personal_best", [])
+        if templates:
+            return "🏅 " + random.choice(templates).format(games=len(recent))
         return f"🏅 best score in {len(recent)} games!"
     return None
+
+
+def get_smart_commentary(scores: dict, user_id: str, puzzle_num: str, score: str, hard_mode: bool) -> list[str]:
+    """Build context-aware commentary for a score. Returns prioritized reply list."""
+    replies = []
+    score_val = 7 if score == "X" else int(score)
+
+    # Base score commentary (always)
+    base = get_commentary(score)
+    if base:
+        replies.append(base)
+
+    # Collect contextual commentary (limit to avoid spam)
+    context = []
+
+    # Hard mode
+    if hard_mode:
+        if score == "X":
+            key = "hard_mode_fail"
+        elif score_val <= 4:
+            key = "hard_mode_good"
+        else:
+            key = "hard_mode_survive"
+        templates = COMMENTARY.get(key, [])
+        if templates:
+            context.append(random.choice(templates))
+
+    # Streak
+    streak_msg = check_streak(scores, user_id)
+    if streak_msg:
+        context.append(streak_msg)
+
+    # Close call on streak (6/6 while on a streak)
+    if score_val == 6:
+        _, puzzles = get_user_scores(scores, user_id)
+        current_streak, _ = calc_streak(puzzles)
+        if current_streak >= 3:
+            templates = COMMENTARY.get("close_call_on_streak", [])
+            if templates:
+                context.append(random.choice(templates).format(streak=current_streak))
+
+    # Comeback
+    comeback = check_comeback(scores, user_id, puzzle_num)
+    if comeback:
+        context.append(comeback)
+
+    # Hot/cold
+    hot_cold = check_hot_cold(scores, user_id)
+    if hot_cold:
+        context.append(hot_cold)
+
+    # Personal best
+    pb = check_personal_best(scores, user_id)
+    if pb:
+        context.append(pb)
+
+    # Pick up to 2 contextual replies to avoid spam
+    if len(context) > 2:
+        context = random.sample(context, 2)
+    replies.extend(context)
+
+    return replies
 
 
 def check_group_records(scores: dict) -> str | None:
@@ -921,9 +954,10 @@ def post_all_played_summary(channel_id: str, scores: dict):
     config["last_all_played_puzzle"] = latest
     save_config(config)
 
+    templates = COMMENTARY.get("all_played", ["Everyone's in! Let's see how you all did."])
     app.client.chat_postMessage(
         channel=channel_id,
-        text="Everyone's in! 🎉 Let's see how you all did.\n",
+        text=random.choice(templates) + "\n",
     )
 
     summary = build_daily_summary(scores)
@@ -986,7 +1020,8 @@ def schedule_daily_tasks():
         now = datetime.now()
 
         if event_type == "morning":
-            nudge = random.choice(MORNING_NUDGES)
+            nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
+            nudge = random.choice(nudges)
             yesterday = (now - timedelta(days=1)).date()
             answer = fetch_wordle_answer(yesterday)
             if answer:
@@ -1090,37 +1125,13 @@ def handle_wordle_score(message, say, context):
     except Exception as e:
         logging.warning(f"Could not add reaction: {e}")
 
-    # Thread replies
-    replies = []
-
-    commentary = get_commentary(score)
-    if commentary:
-        replies.append(commentary)
-
-    if hard_mode and score != "X":
-        replies.append("⭐ hard mode. respect.")
-
+    # Thread replies: context-aware commentary + achievements
     scores = load_scores()
-
-    streak_msg = check_streak(scores, user_id)
-    if streak_msg:
-        replies.append(streak_msg)
+    replies = get_smart_commentary(scores, user_id, puzzle_num, score, hard_mode)
 
     milestone_msg = check_milestone(scores, user_id)
     if milestone_msg:
         replies.append(milestone_msg)
-
-    hot_cold = check_hot_cold(scores, user_id)
-    if hot_cold:
-        replies.append(hot_cold)
-
-    comeback = check_comeback(scores, user_id, puzzle_num)
-    if comeback:
-        replies.append(comeback)
-
-    personal_best = check_personal_best(scores, user_id)
-    if personal_best:
-        replies.append(personal_best)
 
     achievements = check_achievements(scores, user_id)
     replies.extend(achievements)
