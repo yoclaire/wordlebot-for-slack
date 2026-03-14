@@ -10,6 +10,7 @@ import re
 import json
 import random
 import logging
+import calendar
 import threading
 import urllib.request
 from datetime import datetime, timedelta, date
@@ -480,7 +481,8 @@ def build_personal_stats(scores: dict, user_id: str) -> str:
     else:
         achievement_str = ""
 
-    # Recent form
+    # Recent form with sparkline
+    user_scores, _ = get_user_scores(scores, user_id)
     recent = stats["recent_5"]
     if len(recent) >= 5:
         recent_avg = sum(recent) / len(recent)
@@ -488,6 +490,10 @@ def build_personal_stats(scores: dict, user_id: str) -> str:
         form_str = f"\n{trend} Recent form (last 5): *{recent_avg:.1f}* avg"
     else:
         form_str = ""
+
+    # Sparkline of last 14 scores
+    spark_scores = user_scores[-14:] if len(user_scores) >= 14 else user_scores
+    sparkline_str = f"\n\n*Last {len(spark_scores)} games:* `{build_sparkline(spark_scores)}`" if len(spark_scores) >= 3 else ""
 
     return (
         f"*Your Wordle Stats*\n\n"
@@ -498,7 +504,7 @@ def build_personal_stats(scores: dict, user_id: str) -> str:
         f"Win rate: *{stats['wins'] / stats['games'] * 100:.0f}%* | "
         f"Current streak: *{stats['current_streak']}* | "
         f"Best streak: *{stats['best_streak']}*"
-        f"{hm_str}{form_str}{achievement_str}\n"
+        f"{hm_str}{form_str}{achievement_str}{sparkline_str}\n"
         f"\n*Distribution:*\n```\n" + "\n".join(dist_lines) + "\n```"
     )
 
@@ -603,6 +609,278 @@ def build_shame_list(scores: dict) -> str:
     return random.choice(SHAME_MESSAGES).format(names=names)
 
 
+def build_sparkline(score_values: list[int]) -> str:
+    """Build a text sparkline from score values. Lower bars = better scores."""
+    blocks = {1: "▁", 2: "▂", 3: "▃", 4: "▄", 5: "▅", 6: "▆", 7: "█"}
+    return "".join(blocks.get(s, "█") for s in score_values)
+
+
+def check_comeback(scores: dict, user_id: str, puzzle_num: str) -> str | None:
+    """Check if the player bounced back from a bad previous score."""
+    all_puzzles = sorted(scores.keys(), key=lambda x: int(x.replace(",", "")))
+    if puzzle_num not in all_puzzles:
+        return None
+    puzzle_idx = all_puzzles.index(puzzle_num)
+    if puzzle_idx < 1:
+        return None
+
+    prev_puzzle = all_puzzles[puzzle_idx - 1]
+    if user_id not in scores[prev_puzzle]:
+        return None
+
+    prev_str = scores[prev_puzzle][user_id]["score"]
+    curr_str = scores[puzzle_num][user_id]["score"]
+    prev = 7 if prev_str == "X" else int(prev_str)
+    curr = 7 if curr_str == "X" else int(curr_str)
+
+    if prev >= 6 and curr <= 3:
+        messages = [
+            f"📈 comeback! {prev_str}/6 → {curr_str}/6",
+            f"📈 redemption arc. {prev_str}/6 to {curr_str}/6.",
+            f"📈 bounced back from that {prev_str}/6 real quick.",
+        ]
+        return random.choice(messages)
+    return None
+
+
+def check_personal_best(scores: dict, user_id: str) -> str | None:
+    """Check if the latest score is the player's best in the last 30 games."""
+    user_scores, _ = get_user_scores(scores, user_id)
+    if len(user_scores) < 10:
+        return None
+
+    current = user_scores[-1]
+    if current >= 7:
+        return None
+
+    recent = user_scores[-31:-1]
+    if not recent:
+        return None
+
+    if current < min(recent):
+        return f"🏅 best score in {len(recent)} games!"
+    return None
+
+
+def check_group_records(scores: dict) -> str | None:
+    """Check if the latest puzzle set a group record for best/worst average."""
+    puzzle_avgs = []
+    for puzzle_num, players in scores.items():
+        vals = [7 if d["score"] == "X" else int(d["score"]) for d in players.values()]
+        if len(vals) >= 2:
+            puzzle_avgs.append((puzzle_num, sum(vals) / len(vals)))
+
+    if len(puzzle_avgs) < 5:
+        return None
+
+    latest = max(scores.keys(), key=lambda x: int(x.replace(",", "")))
+    latest_entry = next((p for p in puzzle_avgs if p[0] == latest), None)
+    if not latest_entry:
+        return None
+
+    _, latest_avg = latest_entry
+    all_avgs = [avg for _, avg in puzzle_avgs]
+
+    if latest_avg <= min(all_avgs) and all_avgs.count(latest_avg) == 1:
+        return f"🏆 *New group record!* Best group average ever — *{latest_avg:.1f}*"
+    if latest_avg >= max(all_avgs) and all_avgs.count(latest_avg) == 1:
+        return "📉 *New group record...* worst group average ever. we don't talk about this one."
+
+    return None
+
+
+def get_group_streak(scores: dict) -> int:
+    """Count consecutive recent puzzles where all active players participated."""
+    active = get_active_players(scores)
+    if not active:
+        return 0
+
+    all_puzzles = sorted(scores.keys(), key=lambda x: int(x.replace(",", "")), reverse=True)
+    streak = 0
+    for puzzle in all_puzzles:
+        if active <= set(scores[puzzle].keys()):
+            streak += 1
+        else:
+            break
+    return streak
+
+
+def check_puzzle_milestone(puzzle_num: str) -> str | None:
+    """Check if this puzzle number is a milestone worth celebrating."""
+    num = int(puzzle_num.replace(",", ""))
+    if num % 500 == 0:
+        return f"🎊 *Puzzle {num}!* A major Wordle milestone!"
+    if num % 100 == 0:
+        return f"🎯 *Puzzle {num}!* Another century of Wordles."
+    return None
+
+
+WORDLE_LAUNCH = date(2021, 6, 19)
+
+
+def _puzzle_range_for_month(year: int, month: int) -> tuple[int, int]:
+    """Return (start_puzzle, end_puzzle) for a given month."""
+    _, last_day = calendar.monthrange(year, month)
+    start = (date(year, month, 1) - WORDLE_LAUNCH).days
+    end = (date(year, month, last_day) - WORDLE_LAUNCH).days
+    return start, end
+
+
+def _filter_scores_by_puzzle_range(scores: dict, start: int, end: int) -> dict:
+    """Filter scores dict to only include puzzles in the given range."""
+    return {
+        p: players for p, players in scores.items()
+        if start <= int(p.replace(",", "")) <= end
+    }
+
+
+def _build_period_standings(player_stats: dict) -> tuple[list[str], list[tuple]]:
+    """Build ranked standings lines from player stats. Returns (lines, ranked)."""
+    ranked = sorted(player_stats.items(), key=lambda x: sum(x[1]) / len(x[1]))
+    lines = []
+    prev_avg = None
+    current_rank = 0
+    for i, (uid, scores_list) in enumerate(ranked):
+        avg = sum(scores_list) / len(scores_list)
+        rounded = round(avg, 1)
+        if rounded != prev_avg:
+            current_rank = i
+            prev_avg = rounded
+        games = len(scores_list)
+        fails = scores_list.count(7)
+        lines.append(
+            f"  {rank_icon(current_rank)} <@{uid}> — avg *{avg:.1f}* "
+            f"({games} games{f', {fails} fails' if fails else ''})"
+        )
+    return lines, ranked
+
+
+def build_monthly_recap(scores: dict, year: int, month: int) -> str | None:
+    """Build a recap for a specific month."""
+    start, end = _puzzle_range_for_month(year, month)
+    month_scores = _filter_scores_by_puzzle_range(scores, start, end)
+    if not month_scores:
+        return None
+
+    player_stats: dict[str, list[int]] = {}
+    for players in month_scores.values():
+        for uid, data in players.items():
+            if uid not in player_stats:
+                player_stats[uid] = []
+            s = data["score"]
+            player_stats[uid].append(7 if s == "X" else int(s))
+
+    if not player_stats:
+        return None
+
+    month_name = calendar.month_name[month]
+    lines = [f"📅 *{month_name} {year} Recap*\n"]
+
+    standings, ranked = _build_period_standings(player_stats)
+
+    # Champion
+    champ_id, champ_scores = ranked[0]
+    champ_avg = sum(champ_scores) / len(champ_scores)
+    lines.append(f"👑 *Champion:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    lines.append("*Standings:*")
+    lines.extend(standings)
+    lines.append("")
+
+    # Best single solve
+    best_score = 8
+    best_uid = best_puzzle = None
+    for puzzle_num, players in month_scores.items():
+        for uid, data in players.items():
+            val = 7 if data["score"] == "X" else int(data["score"])
+            if val < best_score:
+                best_score, best_uid, best_puzzle = val, uid, puzzle_num
+    if best_uid and best_score < 7:
+        lines.append(f"⚡ *Best solve:* <@{best_uid}> — {best_score}/6 on puzzle {best_puzzle}")
+
+    # Most X's
+    most_fails_uid = max(player_stats, key=lambda uid: player_stats[uid].count(7))
+    fails = player_stats[most_fails_uid].count(7)
+    if fails > 0:
+        lines.append(f"💀 *Most X's:* <@{most_fails_uid}> — {fails}")
+
+    # Group stats
+    all_scores = [s for sl in player_stats.values() for s in sl]
+    group_avg = sum(all_scores) / len(all_scores)
+    lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(month_scores)} puzzles")
+
+    return "\n".join(lines)
+
+
+def build_yearly_recap(scores: dict, year: int) -> str | None:
+    """Build a year-end recap with superlatives."""
+    start = (date(year, 1, 1) - WORDLE_LAUNCH).days
+    end = (date(year, 12, 31) - WORDLE_LAUNCH).days
+    year_scores = _filter_scores_by_puzzle_range(scores, start, end)
+    if not year_scores:
+        return None
+
+    player_stats: dict[str, list[int]] = {}
+    for players in year_scores.values():
+        for uid, data in players.items():
+            if uid not in player_stats:
+                player_stats[uid] = []
+            s = data["score"]
+            player_stats[uid].append(7 if s == "X" else int(s))
+
+    if not player_stats:
+        return None
+
+    lines = [f"🎆 *{year} Wordle Year in Review*\n"]
+    standings, ranked = _build_period_standings(player_stats)
+
+    champ_id, champ_scores = ranked[0]
+    champ_avg = sum(champ_scores) / len(champ_scores)
+    lines.append(f"👑 *Player of the Year:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    lines.append("*Final Standings:*")
+    lines.extend(standings)
+    lines.append("")
+
+    # Most consistent (lowest std dev, min 10 games)
+    consistency = []
+    for uid, sl in player_stats.items():
+        if len(sl) >= 10:
+            avg = sum(sl) / len(sl)
+            std = (sum((s - avg) ** 2 for s in sl) / len(sl)) ** 0.5
+            consistency.append((uid, std))
+    if consistency:
+        most_consistent = min(consistency, key=lambda x: x[1])
+        lines.append(f"🎯 *Most consistent:* <@{most_consistent[0]}>")
+
+    # Most dedicated
+    most_games_uid = max(player_stats, key=lambda uid: len(player_stats[uid]))
+    lines.append(f"📈 *Most dedicated:* <@{most_games_uid}> — {len(player_stats[most_games_uid])} games")
+
+    # Best single solve
+    best_score = 8
+    best_uid = best_puzzle = None
+    for puzzle_num, players in year_scores.items():
+        for uid, data in players.items():
+            val = 7 if data["score"] == "X" else int(data["score"])
+            if val < best_score:
+                best_score, best_uid, best_puzzle = val, uid, puzzle_num
+    if best_uid and best_score < 7:
+        lines.append(f"⚡ *Best solve:* <@{best_uid}> — {best_score}/6 on puzzle {best_puzzle}")
+
+    # Most X's survived
+    most_fails_uid = max(player_stats, key=lambda uid: player_stats[uid].count(7))
+    fails = player_stats[most_fails_uid].count(7)
+    if fails > 0:
+        lines.append(f"💀 *Survived the most X's:* <@{most_fails_uid}> — {fails}")
+
+    # Group stats
+    all_scores = [s for sl in player_stats.values() for s in sl]
+    group_avg = sum(all_scores) / len(all_scores)
+    lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(year_scores)} puzzles")
+    lines.append(f"🧑‍🤝‍🧑 *Active players:* {len(player_stats)}")
+
+    return "\n".join(lines)
+
+
 def backfill_channel(channel_id: str) -> int:
     count = 0
     cursor = None
@@ -652,8 +930,26 @@ def post_all_played_summary(channel_id: str, scores: dict):
     if summary:
         app.client.chat_postMessage(channel=channel_id, text=summary)
 
+    # Group records
+    record = check_group_records(scores)
+    if record:
+        app.client.chat_postMessage(channel=channel_id, text=record)
+
     lb = build_leaderboard(scores, days=7)
     app.client.chat_postMessage(channel=channel_id, text=lb)
+
+    # Group streak
+    group_streak = get_group_streak(scores)
+    if group_streak >= 3 and group_streak % 5 == 0:
+        app.client.chat_postMessage(
+            channel=channel_id,
+            text=f"🤝 *{group_streak}-day group streak!* Everyone's been showing up. Don't be the one to break it.",
+        )
+    elif group_streak >= 3:
+        app.client.chat_postMessage(
+            channel=channel_id,
+            text=f"🤝 group streak: *{group_streak} days* and counting.",
+        )
 
 
 def schedule_daily_tasks():
@@ -728,6 +1024,19 @@ def schedule_daily_tasks():
                     channel=channel_id,
                     text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
                 )
+
+            # Monthly recap on the last day of the month
+            _, last_day = calendar.monthrange(now.year, now.month)
+            if now.day == last_day:
+                recap = build_monthly_recap(scores, now.year, now.month)
+                if recap:
+                    app.client.chat_postMessage(channel=channel_id, text=recap)
+
+            # Yearly recap on Dec 31
+            if now.month == 12 and now.day == 31:
+                yearly = build_yearly_recap(scores, now.year)
+                if yearly:
+                    app.client.chat_postMessage(channel=channel_id, text=yearly)
 
 
 # --- Event handlers ---
@@ -805,11 +1114,28 @@ def handle_wordle_score(message, say, context):
     if hot_cold:
         replies.append(hot_cold)
 
+    comeback = check_comeback(scores, user_id, puzzle_num)
+    if comeback:
+        replies.append(comeback)
+
+    personal_best = check_personal_best(scores, user_id)
+    if personal_best:
+        replies.append(personal_best)
+
     achievements = check_achievements(scores, user_id)
     replies.extend(achievements)
 
     for reply in replies:
         say(text=reply, thread_ts=message["ts"])
+
+    # Puzzle number milestones (post to channel, not thread)
+    puzzle_milestone = check_puzzle_milestone(puzzle_num)
+    if puzzle_milestone:
+        config = load_config()
+        if config.get("last_puzzle_milestone") != puzzle_num:
+            config["last_puzzle_milestone"] = puzzle_num
+            save_config(config)
+            say(text=puzzle_milestone)
 
     # Check if all active players have now played — post summary immediately
     active = get_active_players(scores)
