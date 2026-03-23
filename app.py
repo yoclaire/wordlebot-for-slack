@@ -58,6 +58,14 @@ ACHIEVEMENTS = {
 # --- Data helpers ---
 
 
+WORDLE_EPOCH = date(2021, 6, 19)  # Wordle #0
+
+
+def puzzle_num_to_date(puzzle_num: int | str) -> date:
+    """Convert a Wordle puzzle number to its calendar date."""
+    return WORDLE_EPOCH + timedelta(days=int(str(puzzle_num).replace(",", "")))
+
+
 def fetch_wordle_answer(puzzle_date: date) -> str | None:
     """Fetch the Wordle answer for a given date from the NYT API."""
     url = f"https://www.nytimes.com/svc/wordle/v2/{puzzle_date.isoformat()}.json"
@@ -537,13 +545,26 @@ def build_hardest_puzzles(scores: dict, count: int = 5) -> str:
     hardest = sorted(puzzle_avgs, key=lambda x: -x[1])[:count]
     easiest = sorted(puzzle_avgs, key=lambda x: x[1])[:count]
 
+    # Fetch answers for all puzzles in one pass
+    all_puzzles = {p for p, _, _ in hardest} | {p for p, _, _ in easiest}
+    answers = {}
+    for puzzle in all_puzzles:
+        puzzle_date = puzzle_num_to_date(puzzle)
+        answer = fetch_wordle_answer(puzzle_date)
+        answers[puzzle] = (puzzle_date, answer)
+
+    def format_line(puzzle, avg, players):
+        puzzle_date, answer = answers[puzzle]
+        word = f" *{answer.upper()}*" if answer else ""
+        return f"  Wordle {puzzle} ({puzzle_date.strftime('%-m/%-d')}{word}) — avg *{avg:.1f}* ({players} players)"
+
     lines = ["*Hardest Puzzles* 🟥\n"]
     for puzzle, avg, players in hardest:
-        lines.append(f"  Wordle {puzzle} — avg *{avg:.1f}* ({players} players)")
+        lines.append(format_line(puzzle, avg, players))
 
     lines.append("\n*Easiest Puzzles* 🟩\n")
     for puzzle, avg, players in easiest:
-        lines.append(f"  Wordle {puzzle} — avg *{avg:.1f}* ({players} players)")
+        lines.append(format_line(puzzle, avg, players))
 
     return "\n".join(lines)
 
