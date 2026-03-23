@@ -151,13 +151,12 @@ def calc_streak(puzzles_played: list[int]) -> tuple[int, int]:
         return 0, 0
     current = 1
     best = 1
-    for i in range(len(puzzles_played) - 1, 0, -1):
+    for i in range(1, len(puzzles_played)):
         if puzzles_played[i] - puzzles_played[i - 1] == 1:
             current += 1
-            best = max(best, current)
         else:
-            break
-    best = max(best, current)
+            current = 1
+        best = max(best, current)
     return current, best
 
 
@@ -558,9 +557,10 @@ def get_active_players(scores: dict, lookback: int = 14) -> set[str]:
     return players
 
 
-def build_shame_list(scores: dict) -> str:
+def build_shame_list(scores: dict) -> tuple[str, bool]:
+    """Return (message, has_missing) — has_missing is True when players still need to play."""
     if not scores:
-        return "No scores recorded yet!"
+        return "No scores recorded yet!", False
 
     latest = max(scores.keys(), key=lambda x: int(x.replace(",", "")))
     today_players = set(scores[latest].keys())
@@ -568,11 +568,11 @@ def build_shame_list(scores: dict) -> str:
     missing = active - today_players
 
     if not missing:
-        return "Everyone's played today! 🎉"
+        return "Everyone's played today! 🎉", False
 
     names = ", ".join(f"<@{uid}>" for uid in missing)
     templates = COMMENTARY.get("shame", ["{names}: play wordle already"])
-    return random.choice(templates).format(names=names)
+    return random.choice(templates).format(names=names), True
 
 
 def build_sparkline(score_values: list[int]) -> str:
@@ -991,87 +991,91 @@ def schedule_daily_tasks():
     import time as _time
 
     while True:
-        now = datetime.now()
+        try:
+            now = datetime.now()
 
-        # Next event: 8am nudge or 10pm summary
-        morning = now.replace(hour=8, minute=0, second=0, microsecond=0)
-        evening = now.replace(hour=22, minute=0, second=0, microsecond=0)
+            # Next event: 8am nudge or 10pm summary
+            morning = now.replace(hour=8, minute=0, second=0, microsecond=0)
+            evening = now.replace(hour=22, minute=0, second=0, microsecond=0)
 
-        targets = []
-        if now < morning:
-            targets.append(("morning", morning))
-        if now < evening:
-            targets.append(("evening", evening))
-        if not targets:
-            # Both passed today, schedule morning tomorrow
-            targets.append(("morning", morning + timedelta(days=1)))
+            targets = []
+            if now < morning:
+                targets.append(("morning", morning))
+            if now < evening:
+                targets.append(("evening", evening))
+            if not targets:
+                # Both passed today, schedule morning tomorrow
+                targets.append(("morning", morning + timedelta(days=1)))
 
-        event_type, target = targets[0]
-        wait_secs = (target - now).total_seconds()
-        logging.info(f"Next scheduled event: {event_type} in {wait_secs / 3600:.1f} hours")
-        _time.sleep(wait_secs)
+            event_type, target = targets[0]
+            wait_secs = (target - now).total_seconds()
+            logging.info(f"Next scheduled event: {event_type} in {wait_secs / 3600:.1f} hours")
+            _time.sleep(wait_secs)
 
-        config = load_config()
-        channel_id = config.get("wordle_channel")
-        if not channel_id:
-            continue
+            config = load_config()
+            channel_id = config.get("wordle_channel")
+            if not channel_id:
+                continue
 
-        scores = load_scores()
-        now = datetime.now()
+            scores = load_scores()
+            now = datetime.now()
 
-        if event_type == "morning":
-            nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
-            nudge = random.choice(nudges)
-            yesterday = (now - timedelta(days=1)).date()
-            answer = fetch_wordle_answer(yesterday)
-            if answer:
-                nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
-            app.client.chat_postMessage(
-                channel=channel_id,
-                text=nudge,
-            )
-
-        elif event_type == "evening":
-            # Skip daily summary + shame if already posted via all-played trigger
-            latest = max(scores.keys(), key=lambda x: int(x.replace(",", ""))) if scores else None
-            already_posted = latest and config.get("last_all_played_puzzle") == latest
-
-            if not already_posted:
-                # Daily summary
-                summary = build_daily_summary(scores)
-                if summary:
-                    app.client.chat_postMessage(channel=channel_id, text=summary)
-
-                # Shame list
-                shame = build_shame_list(scores)
-                if "Everyone" not in shame:
-                    app.client.chat_postMessage(channel=channel_id, text=shame)
-
-            # Rivalry check
-            rivalry = check_rivalry(scores)
-            if rivalry:
-                app.client.chat_postMessage(channel=channel_id, text=rivalry)
-
-            # Weekly champion on Sunday night
-            if now.weekday() == 6:
-                lb = build_leaderboard(scores, days=7)
+            if event_type == "morning":
+                nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
+                nudge = random.choice(nudges)
+                yesterday = (now - timedelta(days=1)).date()
+                answer = fetch_wordle_answer(yesterday)
+                if answer:
+                    nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
                 app.client.chat_postMessage(
                     channel=channel_id,
-                    text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
+                    text=nudge,
                 )
 
-            # Monthly recap on the last day of the month
-            _, last_day = calendar.monthrange(now.year, now.month)
-            if now.day == last_day:
-                recap = build_monthly_recap(scores, now.year, now.month)
-                if recap:
-                    app.client.chat_postMessage(channel=channel_id, text=recap)
+            elif event_type == "evening":
+                # Skip daily summary + shame if already posted via all-played trigger
+                latest = max(scores.keys(), key=lambda x: int(x.replace(",", ""))) if scores else None
+                already_posted = latest and config.get("last_all_played_puzzle") == latest
 
-            # Yearly recap on Dec 31
-            if now.month == 12 and now.day == 31:
-                yearly = build_yearly_recap(scores, now.year)
-                if yearly:
-                    app.client.chat_postMessage(channel=channel_id, text=yearly)
+                if not already_posted:
+                    # Daily summary
+                    summary = build_daily_summary(scores)
+                    if summary:
+                        app.client.chat_postMessage(channel=channel_id, text=summary)
+
+                    # Shame list
+                    shame, has_missing = build_shame_list(scores)
+                    if has_missing:
+                        app.client.chat_postMessage(channel=channel_id, text=shame)
+
+                # Rivalry check
+                rivalry = check_rivalry(scores)
+                if rivalry:
+                    app.client.chat_postMessage(channel=channel_id, text=rivalry)
+
+                # Weekly champion on Sunday night
+                if now.weekday() == 6:
+                    lb = build_leaderboard(scores, days=7)
+                    app.client.chat_postMessage(
+                        channel=channel_id,
+                        text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
+                    )
+
+                # Monthly recap on the last day of the month
+                _, last_day = calendar.monthrange(now.year, now.month)
+                if now.day == last_day:
+                    recap = build_monthly_recap(scores, now.year, now.month)
+                    if recap:
+                        app.client.chat_postMessage(channel=channel_id, text=recap)
+
+                # Yearly recap on Dec 31
+                if now.month == 12 and now.day == 31:
+                    yearly = build_yearly_recap(scores, now.year)
+                    if yearly:
+                        app.client.chat_postMessage(channel=channel_id, text=yearly)
+        except Exception:
+            logging.exception("Scheduler error, will retry next cycle")
+            _time.sleep(60)
 
 
 # --- Event handlers ---
@@ -1178,7 +1182,8 @@ def handle_wordle_command(ack, respond, say, command):
         say(text=build_leaderboard(scores, days=9999))
 
     elif args_lower == "shame":
-        say(text=build_shame_list(scores))
+        shame, _ = build_shame_list(scores)
+        say(text=shame)
 
     # --- Ephemeral (only visible to requester) ---
     elif args_lower in ("me", "stats", "mystats"):

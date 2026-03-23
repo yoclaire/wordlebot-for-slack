@@ -172,11 +172,9 @@ class TestCalcStreak(unittest.TestCase):
         self.assertEqual(best, 0)
 
     def test_old_streak_longer(self):
-        # calc_streak walks backwards from the end, so it only finds the
-        # current streak — an older longer streak is not detected as "best"
         current, best = calc_streak([100, 101, 102, 103, 200, 201])
         self.assertEqual(current, 2)
-        self.assertEqual(best, 2)
+        self.assertEqual(best, 4)
 
 
 class TestGetUserStats(unittest.TestCase):
@@ -372,8 +370,9 @@ class TestShameList(unittest.TestCase):
                 "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
             }
         }
-        shame = build_shame_list(scores)
+        shame, has_missing = build_shame_list(scores)
         self.assertIn("Everyone", shame)
+        self.assertFalse(has_missing)
 
     def test_someone_missing(self):
         scores = {
@@ -385,13 +384,15 @@ class TestShameList(unittest.TestCase):
                 "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
             },
         }
-        shame = build_shame_list(scores)
+        shame, has_missing = build_shame_list(scores)
         self.assertIn("U2", shame)
         self.assertNotIn("U1", shame)
+        self.assertTrue(has_missing)
 
     def test_empty_scores(self):
-        shame = build_shame_list({})
+        shame, has_missing = build_shame_list({})
         self.assertIn("No scores", shame)
+        self.assertFalse(has_missing)
 
 
 class TestRivalry(unittest.TestCase):
