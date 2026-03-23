@@ -987,15 +987,15 @@ def post_all_played_summary(channel_id: str, scores: dict):
 
 
 def schedule_daily_tasks():
-    """Run daily tasks: morning nudge at 8am, summary at 7pm, weekly champion Sunday."""
+    """Run daily tasks: morning nudge at 8am, summary at 10pm, weekly champion Sunday."""
     import time as _time
 
     while True:
         now = datetime.now()
 
-        # Next event: 8am nudge or 7pm summary
+        # Next event: 8am nudge or 10pm summary
         morning = now.replace(hour=8, minute=0, second=0, microsecond=0)
-        evening = now.replace(hour=19, minute=0, second=0, microsecond=0)
+        evening = now.replace(hour=22, minute=0, second=0, microsecond=0)
 
         targets = []
         if now < morning:
