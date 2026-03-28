@@ -783,5 +783,49 @@ class TestFormatConditions(unittest.TestCase):
         self.assertIn("W", result)
 
 
+class TestAltModeCommentary(unittest.TestCase):
+    def setUp(self):
+        self._original = _test_globals.get("_alt_active", False)
+        _test_globals["_alt_active"] = True
+
+    def tearDown(self):
+        _test_globals["_alt_active"] = self._original
+
+    def test_alt_score_commentary(self):
+        for score in ["1", "2", "3", "4", "5", "6", "X"]:
+            c = get_commentary(score)
+            self.assertIsNotNone(c, f"No alt commentary for score {score}")
+            key = f"score_{score}" if score != "X" else "score_x"
+            self.assertIn(c, SUPPLEMENTAL[key])
+
+    def test_alt_smart_commentary_base(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", False)
+        self.assertTrue(len(replies) >= 1)
+        self.assertIn(replies[0], SUPPLEMENTAL["score_3"])
+
+    def test_alt_hard_mode(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": True, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", True)
+        self.assertTrue(len(replies) >= 2)
+        hard_found = any(r in SUPPLEMENTAL.get("hard_mode_good", []) for r in replies)
+        self.assertTrue(hard_found)
+
+    def test_alt_shame(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            },
+            "101": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
+            },
+        }
+        shame, has_missing = build_shame_list(scores)
+        self.assertTrue(has_missing)
+        has_crab_emoji = "\U0001f980" in shame or "\U0001f30a" in shame
+        self.assertTrue(has_crab_emoji, f"Shame message missing crab/wave emoji: {shame}")
+
+
 if __name__ == "__main__":
     unittest.main()

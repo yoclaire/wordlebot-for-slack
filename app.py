@@ -260,7 +260,8 @@ def get_user_stats(scores: dict, user_id: str) -> dict | None:
 
 def get_commentary(score: str) -> str | None:
     key = f"score_{score}" if score != "X" else "score_x"
-    templates = COMMENTARY.get(key, [])
+    source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+    templates = source.get(key, [])
     return random.choice(templates) if templates else None
 
 
@@ -292,12 +293,14 @@ def check_streak(scores: dict, user_id: str) -> str | None:
     current, _ = calc_streak(puzzles)
     if current >= 7 and current % 7 == 0:
         key = "streak_epic" if current >= 14 else "streak_hot"
-        templates = COMMENTARY.get(key, [])
+        source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+        templates = source.get(key, [])
         if templates:
             return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> is on a *{current}-day streak*!"
     if current == 3:
-        templates = COMMENTARY.get("streak_building", [])
+        source = SUPPLEMENTAL if _alt_active and "streak_building" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("streak_building", [])
         if templates:
             return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> — 3-day streak going!"
@@ -316,12 +319,14 @@ def check_hot_cold(scores: dict, user_id: str) -> str | None:
     overall_avg = stats["avg"]
     diff = overall_avg - recent_avg
     if diff >= 1.0:
-        templates = COMMENTARY.get("hot_hand", [])
+        source = SUPPLEMENTAL if _alt_active and "hot_hand" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("hot_hand", [])
         if templates:
             return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📈 <@{user_id}> is heating up — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     if diff <= -1.0:
-        templates = COMMENTARY.get("cold_spell", [])
+        source = SUPPLEMENTAL if _alt_active and "cold_spell" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("cold_spell", [])
         if templates:
             return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📉 <@{user_id}> going through it — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
@@ -668,7 +673,8 @@ def build_shame_list(scores: dict) -> tuple[str, bool]:
         return "Everyone's played today! 🎉", False
 
     names = ", ".join(f"<@{uid}>" for uid in missing)
-    templates = COMMENTARY.get("shame", ["{names}: play wordle already"])
+    source = SUPPLEMENTAL if _alt_active and "shame" in SUPPLEMENTAL else COMMENTARY
+    templates = source.get("shame", ["{names}: play wordle already"])
     return random.choice(templates).format(names=names), True
 
 
@@ -697,12 +703,14 @@ def check_comeback(scores: dict, user_id: str, puzzle_num: str) -> str | None:
     curr = 7 if curr_str == "X" else int(curr_str)
 
     if prev >= 6 and curr <= 3:
-        templates = COMMENTARY.get("comeback_strong", [])
+        source = SUPPLEMENTAL if _alt_active and "comeback_strong" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("comeback_strong", [])
         if templates:
             return random.choice(templates).format(prev_score=prev_str, score=curr_str)
         return f"📈 comeback! {prev_str}/6 → {curr_str}/6"
     if prev >= 5 and curr < prev:
-        templates = COMMENTARY.get("comeback_ok", [])
+        source = SUPPLEMENTAL if _alt_active and "comeback_ok" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("comeback_ok", [])
         if templates:
             return random.choice(templates).format(prev_score=prev_str, score=curr_str)
     return None
@@ -723,7 +731,8 @@ def check_personal_best(scores: dict, user_id: str) -> str | None:
         return None
 
     if current < min(recent):
-        templates = COMMENTARY.get("personal_best", [])
+        source = SUPPLEMENTAL if _alt_active and "personal_best" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("personal_best", [])
         if templates:
             return random.choice(templates).format(games=len(recent))
         return f"🏅 best score in {len(recent)} games!"
@@ -751,7 +760,8 @@ def get_smart_commentary(scores: dict, user_id: str, puzzle_num: str, score: str
             key = "hard_mode_good"
         else:
             key = "hard_mode_survive"
-        templates = COMMENTARY.get(key, [])
+        source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+        templates = source.get(key, [])
         if templates:
             context.append(random.choice(templates))
 
@@ -765,7 +775,8 @@ def get_smart_commentary(scores: dict, user_id: str, puzzle_num: str, score: str
         _, puzzles = get_user_scores(scores, user_id)
         current_streak, _ = calc_streak(puzzles)
         if current_streak >= 3:
-            templates = COMMENTARY.get("close_call_on_streak", [])
+            source = SUPPLEMENTAL if _alt_active and "close_call_on_streak" in SUPPLEMENTAL else COMMENTARY
+            templates = source.get("close_call_on_streak", [])
             if templates:
                 context.append(random.choice(templates).format(streak=current_streak))
 
@@ -1211,13 +1222,17 @@ def handle_wordle_score(message, say, context):
             "X": "skull",
         }.get(score, "eyes")
 
+        override = SUPPLEMENTAL.get("reaction_override", "")
+        if _alt_active and override:
+            reaction = override
+
         app.client.reactions_add(
             channel=message["channel"],
             timestamp=message["ts"],
             name=reaction,
         )
 
-        if hard_mode:
+        if hard_mode and not (_alt_active and override):
             app.client.reactions_add(
                 channel=message["channel"],
                 timestamp=message["ts"],
