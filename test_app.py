@@ -83,6 +83,9 @@ rank_icon = _test_globals["rank_icon"]
 get_smart_commentary = _test_globals["get_smart_commentary"]
 check_streak = _test_globals["check_streak"]
 COMMENTARY = _test_globals["COMMENTARY"]
+SUPPLEMENTAL = _test_globals.get("SUPPLEMENTAL", {})
+_apply_diacritics = _test_globals.get("_apply_diacritics")
+_format_conditions = _test_globals.get("_format_conditions")
 
 
 # --- Test data ---
@@ -700,6 +703,45 @@ class TestRankIcon(unittest.TestCase):
 
     def test_beyond_ten(self):
         self.assertEqual(rank_icon(15), "16.")
+
+
+class TestSupplementalLoader(unittest.TestCase):
+    def test_supplemental_loads(self):
+        self.assertIsInstance(SUPPLEMENTAL, dict)
+
+    def test_has_score_keys(self):
+        for key in ["score_1", "score_2", "score_3", "score_4", "score_5", "score_6", "score_x"]:
+            self.assertIn(key, SUPPLEMENTAL, f"Missing key: {key}")
+            self.assertTrue(len(SUPPLEMENTAL[key]) >= 3, f"Too few templates for {key}")
+
+    def test_has_morning_evening(self):
+        self.assertIn("morning_briefing", SUPPLEMENTAL)
+        self.assertIn("evening_briefing", SUPPLEMENTAL)
+
+    def test_has_shame_and_all_played(self):
+        self.assertIn("shame", SUPPLEMENTAL)
+        self.assertIn("all_played", SUPPLEMENTAL)
+        for tmpl in SUPPLEMENTAL["shame"]:
+            self.assertIn("{names}", tmpl)
+
+
+class TestApplyDiacritics(unittest.TestCase):
+    def test_adds_combining_chars(self):
+        result = _apply_diacritics("TEST")
+        self.assertGreater(len(result), 4)
+
+    def test_preserves_base_text(self):
+        import unicodedata
+        result = _apply_diacritics("HELLO")
+        base = "".join(c for c in result if unicodedata.category(c) != "Mn")
+        self.assertEqual(base, "HELLO")
+
+    def test_empty_string(self):
+        self.assertEqual(_apply_diacritics(""), "")
+
+    def test_non_alpha_unchanged(self):
+        result = _apply_diacritics("123")
+        self.assertEqual(result, "123")
 
 
 if __name__ == "__main__":

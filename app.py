@@ -39,6 +39,9 @@ RANK_ICONS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"
 COMMENTARY_FILE = Path(__file__).parent / "commentary.json"
 COMMENTARY = json.loads(COMMENTARY_FILE.read_text()) if COMMENTARY_FILE.exists() else {}
 
+SUPPLEMENTAL_FILE = Path(__file__).parent / "supplemental.json"
+SUPPLEMENTAL = json.loads(SUPPLEMENTAL_FILE.read_text()) if SUPPLEMENTAL_FILE.exists() else {}
+
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
 
 ACHIEVEMENTS = {
@@ -202,6 +205,22 @@ def get_commentary(score: str) -> str | None:
     key = f"score_{score}" if score != "X" else "score_x"
     templates = COMMENTARY.get(key, [])
     return random.choice(templates) if templates else None
+
+
+def _apply_diacritics(text: str) -> str:
+    """Add combining diacritical marks to alphabetic characters."""
+    _marks = [
+        "\u0300", "\u0301", "\u0302", "\u0303", "\u0304", "\u0305",
+        "\u0306", "\u0307", "\u0308", "\u030a", "\u030b", "\u030c",
+        "\u0327", "\u0328", "\u0330", "\u0331", "\u0332", "\u0333",
+    ]
+    result = []
+    for char in text:
+        result.append(char)
+        if char.isalpha():
+            for _ in range(random.randint(1, 3)):
+                result.append(random.choice(_marks))
+    return "".join(result)
 
 
 def check_milestone(scores: dict, user_id: str) -> str | None:
