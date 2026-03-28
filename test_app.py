@@ -827,5 +827,37 @@ class TestAltModeCommentary(unittest.TestCase):
         self.assertTrue(has_crab_emoji, f"Shame message missing crab/wave emoji: {shame}")
 
 
+class TestAltModeDailySummary(unittest.TestCase):
+    def setUp(self):
+        self._original = _test_globals.get("_alt_active", False)
+        _test_globals["_alt_active"] = True
+
+    def tearDown(self):
+        _test_globals["_alt_active"] = self._original
+
+    def test_alt_daily_summary_header(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertIsNotNone(summary)
+        self.assertNotIn("Wordle 100 Results", summary)
+
+    def test_alt_daily_summary_difficulty(self):
+        scores = {
+            "100": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "6", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        normal_texts = ["easy one today", "solid challenge", "tough one today", "brutal. absolute brutality."]
+        has_normal = any(t in summary for t in normal_texts)
+        self.assertFalse(has_normal, "Should use alt difficulty text in alt mode")
+
+
 if __name__ == "__main__":
     unittest.main()

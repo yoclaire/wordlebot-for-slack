@@ -481,7 +481,12 @@ def build_daily_summary(scores: dict) -> str | None:
         ),
     )
 
-    lines = [f"*Wordle {latest} Results*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("wrap_intro", [])
+        header = random.choice(intros) if intros else f"*Puzzle {latest}*"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"*Wordle {latest} Results*\n"]
     prev_key = None
     current_rank = 0
     for i, (user_id, data) in enumerate(ranked):
@@ -498,14 +503,28 @@ def build_daily_summary(scores: dict) -> str | None:
     all_scores = [7 if d["score"] == "X" else int(d["score"]) for d in puzzle_scores.values()]
     if all_scores:
         avg = sum(all_scores) / len(all_scores)
-        if avg <= 3.0:
-            lines.append("\n🟢 easy one today")
-        elif avg <= 4.0:
-            lines.append("\n🟡 solid challenge")
-        elif avg <= 5.0:
-            lines.append("\n🟠 tough one today")
+        if _alt_active:
+            diff = SUPPLEMENTAL.get("difficulty", {})
+            if avg <= 3.0:
+                lines.append(f"\n{diff.get('easy', '')}")
+            elif avg <= 4.0:
+                lines.append(f"\n{diff.get('solid', '')}")
+            elif avg <= 5.0:
+                lines.append(f"\n{diff.get('tough', '')}")
+            else:
+                lines.append(f"\n{diff.get('brutal', '')}")
+            facts = SUPPLEMENTAL.get("general_facts", [])
+            if facts:
+                lines.append(f"\n_{random.choice(facts)}_")
         else:
-            lines.append("\n🔴 brutal. absolute brutality.")
+            if avg <= 3.0:
+                lines.append("\n🟢 easy one today")
+            elif avg <= 4.0:
+                lines.append("\n🟡 solid challenge")
+            elif avg <= 5.0:
+                lines.append("\n🟠 tough one today")
+            else:
+                lines.append("\n🔴 brutal. absolute brutality.")
 
     return "\n".join(lines)
 
@@ -1129,16 +1148,34 @@ def schedule_daily_tasks():
             now = datetime.now()
 
             if event_type == "morning":
-                nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
-                nudge = random.choice(nudges)
-                yesterday = (now - timedelta(days=1)).date()
-                answer = fetch_wordle_answer(yesterday)
-                if answer:
-                    nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
-                app.client.chat_postMessage(
-                    channel=channel_id,
-                    text=nudge,
-                )
+                if _alt_active:
+                    parts = []
+                    conditions = _fetch_marine_conditions()
+                    if conditions:
+                        parts.append(conditions)
+                    briefings = SUPPLEMENTAL.get("morning_briefing", [])
+                    if briefings:
+                        parts.append(random.choice(briefings))
+                    yesterday = (now - timedelta(days=1)).date()
+                    answer = fetch_wordle_answer(yesterday)
+                    if answer:
+                        parts.append(f"Oh. Yesterday's answer was *{answer.upper()}*.")
+                    if parts:
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text="\n\n".join(parts),
+                        )
+                else:
+                    nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
+                    nudge = random.choice(nudges)
+                    yesterday = (now - timedelta(days=1)).date()
+                    answer = fetch_wordle_answer(yesterday)
+                    if answer:
+                        nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
+                    app.client.chat_postMessage(
+                        channel=channel_id,
+                        text=nudge,
+                    )
 
             elif event_type == "evening":
                 # Skip daily summary + shame if already posted via all-played trigger
@@ -1150,6 +1187,20 @@ def schedule_daily_tasks():
                     summary = build_daily_summary(scores)
                     if summary:
                         app.client.chat_postMessage(channel=channel_id, text=summary)
+
+                    if _alt_active:
+                        parts = []
+                        conditions = _fetch_marine_conditions()
+                        if conditions:
+                            parts.append(conditions)
+                        briefings = SUPPLEMENTAL.get("evening_briefing", [])
+                        if briefings:
+                            parts.append(random.choice(briefings))
+                        if parts:
+                            app.client.chat_postMessage(
+                                channel=channel_id,
+                                text="\n\n".join(parts),
+                            )
 
                     # Shame list
                     shame, has_missing = build_shame_list(scores)
