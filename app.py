@@ -934,14 +934,22 @@ def build_monthly_recap(scores: dict, year: int, month: int) -> str | None:
         return None
 
     month_name = calendar.month_name[month]
-    lines = [f"📅 *{month_name} {year} Recap*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("monthly_intro", [])
+        header = random.choice(intros) if intros else f"Monthly report: {month_name} {year}"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"📅 *{month_name} {year} Recap*\n"]
 
     standings, ranked = _build_period_standings(player_stats)
 
     # Champion
     champ_id, champ_scores = ranked[0]
     champ_avg = sum(champ_scores) / len(champ_scores)
-    lines.append(f"👑 *Champion:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    if _alt_active:
+        lines.append(f"🦀 *Dominant specimen:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} foraging sessions\n")
+    else:
+        lines.append(f"👑 *Champion:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
     lines.append("*Standings:*")
     lines.extend(standings)
     lines.append("")
@@ -968,6 +976,11 @@ def build_monthly_recap(scores: dict, year: int, month: int) -> str | None:
     group_avg = sum(all_scores) / len(all_scores)
     lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(month_scores)} puzzles")
 
+    if _alt_active:
+        facts = SUPPLEMENTAL.get("general_facts", [])
+        if facts:
+            lines.append(f"\n_{random.choice(facts)}_")
+
     return "\n".join(lines)
 
 
@@ -990,12 +1003,20 @@ def build_yearly_recap(scores: dict, year: int) -> str | None:
     if not player_stats:
         return None
 
-    lines = [f"🎆 *{year} Wordle Year in Review*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("yearly_intro", [])
+        header = random.choice(intros) if intros else f"Annual report: {year}"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"🎆 *{year} Wordle Year in Review*\n"]
     standings, ranked = _build_period_standings(player_stats)
 
     champ_id, champ_scores = ranked[0]
     champ_avg = sum(champ_scores) / len(champ_scores)
-    lines.append(f"👑 *Player of the Year:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    if _alt_active:
+        lines.append(f"🦀 *Alpha specimen:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} sessions\n")
+    else:
+        lines.append(f"👑 *Player of the Year:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
     lines.append("*Final Standings:*")
     lines.extend(standings)
     lines.append("")
@@ -1037,6 +1058,11 @@ def build_yearly_recap(scores: dict, year: int) -> str | None:
     group_avg = sum(all_scores) / len(all_scores)
     lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(year_scores)} puzzles")
     lines.append(f"🧑‍🤝‍🧑 *Active players:* {len(player_stats)}")
+
+    if _alt_active:
+        facts = SUPPLEMENTAL.get("general_facts", [])
+        if facts:
+            lines.append(f"\n_{random.choice(facts)}_")
 
     return "\n".join(lines)
 
@@ -1081,7 +1107,8 @@ def post_all_played_summary(channel_id: str, scores: dict):
     config["last_all_played_puzzle"] = latest
     save_config(config)
 
-    templates = COMMENTARY.get("all_played", ["Everyone's in! Let's see how you all did."])
+    source = SUPPLEMENTAL if _alt_active and "all_played" in SUPPLEMENTAL else COMMENTARY
+    templates = source.get("all_played", ["Everyone's in! Let's see how you all did."])
     app.client.chat_postMessage(
         channel=channel_id,
         text=random.choice(templates) + "\n",
@@ -1215,10 +1242,18 @@ def schedule_daily_tasks():
                 # Weekly champion on Sunday night
                 if now.weekday() == 6:
                     lb = build_leaderboard(scores, days=7)
-                    app.client.chat_postMessage(
-                        channel=channel_id,
-                        text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
-                    )
+                    if _alt_active:
+                        intros = SUPPLEMENTAL.get("weekly_intro", [])
+                        header = random.choice(intros) if intros else "Weekly results"
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text=f"{header}\n\n{lb}",
+                        )
+                    else:
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
+                        )
 
                 # Monthly recap on the last day of the month
                 _, last_day = calendar.monthrange(now.year, now.month)
