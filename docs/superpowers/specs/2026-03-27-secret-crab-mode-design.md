@@ -18,6 +18,8 @@ The bot does not know it's being funny. It has simply always been deeply investe
 
 **Tone:** Matter-of-fact. Serious. No puns. No dad jokes. No winking at the camera. The humor comes entirely from the sincerity and the unreasonable depth of knowledge.
 
+**Emoji usage:** Every template leads with 🦀 or 🌊, matching the frequency and position of emoji in normal mode. 🦀 is the primary emoji (used where normal bot uses any emoji). 🌊 is used where ocean/wave context is appropriate. The wall of uniform 🦀🦀🦀 where there used to be variety IS part of the joke.
+
 **Example voice:** "Mavericks reporting 1.4m swell at 9s intervals. Water temp: 12.8C. Conditions favorable for foraging along the reef. Also, here are today's Wordle results, I suppose."
 
 ## What Changes During Crab Mode

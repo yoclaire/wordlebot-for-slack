@@ -29,245 +29,245 @@ This is the crab content pool — all alternative templates stored under obfusca
   "mode_off": "CRAB MODE DEACTIVATED",
 
   "score_1": [
-    "A *Portunus pelagicus* doesn't need a second strike. Neither, apparently, do you.",
-    "The mantis shrimp strikes at 23 m/s. This was comparable efficiency.",
-    "Precision reminiscent of *Ocypode* hunting by moonlight. No wasted movement.",
-    "The coconut crab opens a coconut in two motions. You solved this in one.",
-    "Efficient. Like *Callinectes sapidus* intercepting prey mid-current. Clean work.",
-    "The Japanese spider crab wastes nothing. Today, neither did you.",
-    "Stone crabs crush oyster shells on the first attempt. This was noted.",
-    "A textbook ambush. The *Charybdis hellerii* would approve.",
-    "One attempt. The *Birgus latro* doesn't hesitate either.",
-    "Clinical. Like a pistol shrimp's cavitation bubble. One shot, total destruction."
+    "🦀 A *Portunus pelagicus* doesn't need a second strike. Neither, apparently, do you.",
+    "🦀 The mantis shrimp strikes at 23 m/s. This was comparable efficiency.",
+    "🦀 Precision reminiscent of *Ocypode* hunting by moonlight. No wasted movement.",
+    "🦀 The coconut crab opens a coconut in two motions. You solved this in one.",
+    "🦀 Efficient. Like *Callinectes sapidus* intercepting prey mid-current. Clean work.",
+    "🦀 The Japanese spider crab wastes nothing. Today, neither did you.",
+    "🦀 Stone crabs crush oyster shells on the first attempt. This was noted.",
+    "🦀 A textbook ambush. The *Charybdis hellerii* would approve.",
+    "🦀 One attempt. The *Birgus latro* doesn't hesitate either.",
+    "🦀 Clinical. Like a pistol shrimp's cavitation bubble. One shot, total destruction."
   ],
   "score_2": [
-    "Two attempts. The blue crab dispatches a mussel in roughly the same.",
-    "Efficient lateral movement. A *Carcinus maenas* covers ground this way.",
-    "The Dungeness crab rarely needs more than two passes through a kelp bed.",
-    "A fiddler crab waves twice and the message is received. Comparable.",
-    "Swift. The *Ovalipes ocellatus* would find no inefficiency here.",
-    "Two guesses. The decorator crab places each sponge with similar precision.",
-    "The red rock crab identifies prey in two sweeps of its antennae. Noted.",
-    "Economical. Like the mating display of *Uca pugilator* — brief and effective."
+    "🦀 Two attempts. The blue crab dispatches a mussel in roughly the same.",
+    "🦀 Efficient lateral movement. A *Carcinus maenas* covers ground this way.",
+    "🦀 The Dungeness crab rarely needs more than two passes through a kelp bed.",
+    "🦀 A fiddler crab waves twice and the message is received. Comparable.",
+    "🦀 Swift. The *Ovalipes ocellatus* would find no inefficiency here.",
+    "🦀 Two guesses. The decorator crab places each sponge with similar precision.",
+    "🦀 The red rock crab identifies prey in two sweeps of its antennae. Noted.",
+    "🦀 Economical. Like the mating display of *Uca pugilator* — brief and effective."
   ],
   "score_3": [
-    "Methodical. A *Carcinus maenas* working the tide pools with purpose.",
-    "The reliable approach of a hermit crab selecting its next shell. Considered. Deliberate.",
-    "Like the fiddler crab's daily feeding rhythm — nothing rushed, nothing wasted.",
-    "A steady lateral approach. The *Pachygrapsus crassipes* navigates the rocks this way.",
-    "Consistent as the tides. A three-guess solve is the backbone of any colony.",
-    "The Dungeness crab doesn't rush. It processes. Much like this solve.",
-    "You foraged through the possibilities the way *Uca* sifts sediment. Respectably.",
-    "Solid. The red rock crab would find no fault in this approach."
+    "🦀 Methodical. A *Carcinus maenas* working the tide pools with purpose.",
+    "🦀 The reliable approach of a hermit crab selecting its next shell. Considered. Deliberate.",
+    "🦀 Like the fiddler crab's daily feeding rhythm — nothing rushed, nothing wasted.",
+    "🦀 A steady lateral approach. The *Pachygrapsus crassipes* navigates the rocks this way.",
+    "🦀 Consistent as the tides. A three-guess solve is the backbone of any colony.",
+    "🦀 The Dungeness crab doesn't rush. It processes. Much like this solve.",
+    "🦀 You foraged through the possibilities the way *Uca* sifts sediment. Respectably.",
+    "🦀 Solid. The red rock crab would find no fault in this approach."
   ],
   "score_4": [
-    "Four passes. The *Grapsus grapsus* sometimes takes four tide cycles to find its preferred algae patch.",
-    "A hermit crab may inspect four shells before committing. This is not indecision. It is thoroughness.",
-    "The shore crab works methodically. Four attempts is within normal foraging parameters.",
-    "Adequate coverage of the search area. The *Pagurus samuelis* takes a similar approach.",
-    "Four. The Jonah crab (*Cancer borealis*) doesn't judge. Neither do we. Officially.",
-    "Like the box crab's deliberate excavation technique. Not fast, but it works.",
-    "The *Hemigrapsus nudus* completes its burrow in roughly four digging cycles. On schedule.",
-    "Four attempts. Within one standard deviation of the colony mean."
+    "🦀 Four passes. The *Grapsus grapsus* sometimes takes four tide cycles to find its preferred algae patch.",
+    "🦀 A hermit crab may inspect four shells before committing. This is not indecision. It is thoroughness.",
+    "🦀 The shore crab works methodically. Four attempts is within normal foraging parameters.",
+    "🦀 Adequate coverage of the search area. The *Pagurus samuelis* takes a similar approach.",
+    "🦀 Four. The Jonah crab (*Cancer borealis*) doesn't judge. Neither do we. Officially.",
+    "🦀 Like the box crab's deliberate excavation technique. Not fast, but it works.",
+    "🦀 The *Hemigrapsus nudus* completes its burrow in roughly four digging cycles. On schedule.",
+    "🦀 Four attempts. Within one standard deviation of the colony mean."
   ],
   "score_5": [
-    "The soft-shell crab is at its most vulnerable mid-molt. You looked like that out there.",
-    "Sometimes survival is the achievement. Ask any *Pagurus* during a shell shortage.",
-    "The *Birgus latro* retreats to its burrow when conditions are unfavorable. No shame in that.",
-    "A ghost crab running from a shorebird. You made it. That's what counts.",
-    "Molting is a dangerous process. Not every crab survives it. But you did. Barely.",
-    "The horseshoe crab has survived 450 million years by not giving up. Respect.",
-    "Even the *Gecarcoidea natalis* loses a few on the journey to sea. You arrived.",
-    "The hermit crab between shells — exposed, vulnerable, but still moving forward."
+    "🦀 The soft-shell crab is at its most vulnerable mid-molt. You looked like that out there.",
+    "🦀 Sometimes survival is the achievement. Ask any *Pagurus* during a shell shortage.",
+    "🦀 The *Birgus latro* retreats to its burrow when conditions are unfavorable. No shame in that.",
+    "🦀 A ghost crab running from a shorebird. You made it. That's what counts.",
+    "🦀 Molting is a dangerous process. Not every crab survives it. But you did. Barely.",
+    "🦀 The horseshoe crab has survived 450 million years by not giving up. Respect.",
+    "🦀 Even the *Gecarcoidea natalis* loses a few on the journey to sea. You arrived.",
+    "🦀 The hermit crab between shells — exposed, vulnerable, but still moving forward."
   ],
   "score_6": [
-    "Six attempts. The *Eriocheir sinensis* sometimes takes six tide cycles to cross an estuary. It always arrives.",
-    "A spider crab navigating a gauntlet of sea stars. Harrowing. But you're here.",
-    "The pea crab spends its entire life inside a mussel. Confined, but alive. Like this solve.",
-    "The last possible attempt. The *Calappa* retreats into its shell and simply waits. Bold strategy.",
-    "We've seen king crabs survive worse conditions. Barely.",
-    "The red crab migration across Christmas Island has a high attrition rate. You are not a statistic today.",
-    "Six. In crab terms, this is the equivalent of molting in open water. High risk, low margin.",
-    "Like a coconut crab descending from the palm on the sixth attempt. Technically successful."
+    "🦀 Six attempts. The *Eriocheir sinensis* sometimes takes six tide cycles to cross an estuary. It always arrives.",
+    "🦀 A spider crab navigating a gauntlet of sea stars. Harrowing. But you're here.",
+    "🦀 The pea crab spends its entire life inside a mussel. Confined, but alive. Like this solve.",
+    "🦀 The last possible attempt. The *Calappa* retreats into its shell and simply waits. Bold strategy.",
+    "🦀 We've seen king crabs survive worse conditions. Barely.",
+    "🦀 The red crab migration across Christmas Island has a high attrition rate. You are not a statistic today.",
+    "🦀 Six. In crab terms, this is the equivalent of molting in open water. High risk, low margin.",
+    "🦀 Like a coconut crab descending from the palm on the sixth attempt. Technically successful."
   ],
   "score_x": [
-    "The ocean does not negotiate. Neither, apparently, did today's puzzle.",
-    "In the wild, the molt failure rate for *Cancer pagurus* approaches 30%. These things happen.",
-    "A *Paralithodes camtschaticus* caught outside its depth range. The water was too warm.",
-    "The Christmas Island red crabs lose thousands on the migration. Nature is indifferent.",
-    "Habitat loss claims even the strongest. Today's word was your rising sea level.",
-    "The coconut crab's armor offers no protection against some predators. Today was that predator.",
-    "Not every larva reaches the shore. The pelagic phase is unforgiving.",
-    "The *Eriocheir sinensis* swims against the current for months. Sometimes the current wins.",
-    "A failed molt. The old carapace did not release. There is no recovering from this.",
-    "The research team has documented the loss. We will continue monitoring."
+    "🦀 The ocean does not negotiate. Neither, apparently, did today's puzzle.",
+    "🦀 In the wild, the molt failure rate for *Cancer pagurus* approaches 30%. These things happen.",
+    "🦀 A *Paralithodes camtschaticus* caught outside its depth range. The water was too warm.",
+    "🦀 The Christmas Island red crabs lose thousands on the migration. Nature is indifferent.",
+    "🦀 Habitat loss claims even the strongest. Today's word was your rising sea level.",
+    "🦀 The coconut crab's armor offers no protection against some predators. Today was that predator.",
+    "🌊 Not every larva reaches the shore. The pelagic phase is unforgiving.",
+    "🌊 The *Eriocheir sinensis* swims against the current for months. Sometimes the current wins.",
+    "🦀 A failed molt. The old carapace did not release. There is no recovering from this.",
+    "🦀 The research team has documented the loss. We will continue monitoring."
   ],
 
   "hard_mode_good": [
-    "Hard mode with a low score. The *Birgus latro* climbs 6-meter palms for coconuts. Comparable ambition, comparable success.",
-    "Hard mode. The decorator crab adds complexity voluntarily. Respect.",
-    "Voluntary constraint, excellent result. The way a spider crab navigates the reef — the hard route, by choice."
+    "🦀 Hard mode with a low score. The *Birgus latro* climbs 6-meter palms for coconuts. Comparable ambition, comparable success.",
+    "🦀 Hard mode. The decorator crab adds complexity voluntarily. Respect.",
+    "🦀 Voluntary constraint, excellent result. The way a spider crab navigates the reef — the hard route, by choice."
   ],
   "hard_mode_survive": [
-    "Even armored crabs take damage during the molt. Hard mode survival is its own reward.",
-    "Hard mode. Like the hermit crab choosing a shell slightly too small. It works. It's not comfortable.",
-    "Hard mode at this score is the crab equivalent of foraging during a storm surge. You lived."
+    "🦀 Even armored crabs take damage during the molt. Hard mode survival is its own reward.",
+    "🦀 Hard mode. Like the hermit crab choosing a shell slightly too small. It works. It's not comfortable.",
+    "🦀 Hard mode at this score is the crab equivalent of foraging during a storm surge. You lived."
   ],
   "hard_mode_fail": [
-    "Hard mode X. The hermit crab in an ill-fitting shell. Ambitious protection, inadequate coverage.",
-    "A bold choice. The coconut crab does not always reach the top of the palm.",
-    "Hard mode failure. The decorated crab's camouflage is not always sufficient."
+    "🦀 Hard mode X. The hermit crab in an ill-fitting shell. Ambitious protection, inadequate coverage.",
+    "🦀 A bold choice. The coconut crab does not always reach the top of the palm.",
+    "🦀 Hard mode failure. The decorated crab's camouflage is not always sufficient."
   ],
 
   "streak_building": [
-    "{streak} consecutive days observed. The specimen has established a routine.",
-    "Day {streak} of unbroken activity. Foraging patterns are consistent.",
-    "{streak}-day observation streak. Behavioral consistency noted."
+    "🦀 {streak} consecutive days observed. The specimen has established a routine.",
+    "🦀 Day {streak} of unbroken activity. Foraging patterns are consistent.",
+    "🦀 {streak}-day observation streak. Behavioral consistency noted."
   ],
   "streak_hot": [
-    "{streak} days without interruption. Remarkable endurance for this species.",
-    "Day {streak}. The specimen shows no signs of fatigue or retreat.",
-    "{streak} consecutive foraging days. This exceeds typical *Carcinus maenas* patterns."
+    "🦀 {streak} days without interruption. Remarkable endurance for this species.",
+    "🦀 Day {streak}. The specimen shows no signs of fatigue or retreat.",
+    "🦀 {streak} consecutive foraging days. This exceeds typical *Carcinus maenas* patterns."
   ],
   "streak_epic": [
-    "{streak} days. This exceeds all documented behavioral records for the colony.",
-    "Day {streak}. At this point we've stopped counting and started publishing.",
-    "{streak} consecutive days. The other researchers don't believe our data."
+    "🦀 {streak} days. This exceeds all documented behavioral records for the colony.",
+    "🦀 Day {streak}. At this point we've stopped counting and started publishing.",
+    "🦀 {streak} consecutive days. The other researchers don't believe our data."
   ],
 
   "close_call_on_streak": [
-    "A near-miss. The specimen nearly failed to forage. Observation streak: {streak} days.",
-    "6/6 — the crab equivalent of barely returning before the tide. {streak}-day streak holds.",
-    "Survival margins that thin concern the research team. {streak} days observed."
+    "🦀 A near-miss. The specimen nearly failed to forage. Observation streak: {streak} days.",
+    "🦀 6/6 — the crab equivalent of barely returning before the tide. {streak}-day streak holds.",
+    "🦀 Survival margins that thin concern the research team. {streak} days observed."
   ],
   "comeback_strong": [
-    "Notable recovery. From {prev_score}/6 to {score}/6. The molt appears complete.",
-    "Significant behavioral improvement. {prev_score}/6 to {score}/6. Conditions have shifted.",
-    "A *Callinectes sapidus* emerging from a damaged shell, stronger. {prev_score}/6 to {score}/6."
+    "🦀 Notable recovery. From {prev_score}/6 to {score}/6. The molt appears complete.",
+    "🦀 Significant behavioral improvement. {prev_score}/6 to {score}/6. Conditions have shifted.",
+    "🦀 A *Callinectes sapidus* emerging from a damaged shell, stronger. {prev_score}/6 to {score}/6."
   ],
   "comeback_ok": [
-    "Marginal improvement over yesterday's {prev_score}/6. The tide is turning.",
-    "Better foraging conditions today. {prev_score}/6 to {score}/6.",
-    "Recovery trajectory is positive after yesterday's {prev_score}/6."
+    "🦀 Marginal improvement over yesterday's {prev_score}/6. The tide is turning.",
+    "🌊 Better foraging conditions today. {prev_score}/6 to {score}/6.",
+    "🦀 Recovery trajectory is positive after yesterday's {prev_score}/6."
   ],
   "hot_hand": [
-    "This specimen is exhibiting peak foraging efficiency. *{recent_avg:.1f}* avg vs *{overall_avg:.1f}* career.",
-    "Heightened performance period detected. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall.",
-    "The crab equivalent of prime season. *{recent_avg:.1f}* lately vs *{overall_avg:.1f}* career."
+    "🦀 This specimen is exhibiting peak foraging efficiency. *{recent_avg:.1f}* avg vs *{overall_avg:.1f}* career.",
+    "🦀 Heightened performance period detected. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall.",
+    "🦀 The crab equivalent of prime season. *{recent_avg:.1f}* lately vs *{overall_avg:.1f}* career."
   ],
   "cold_spell": [
-    "Performance decline noted. *{recent_avg:.1f}* avg vs *{overall_avg:.1f}* career. Environmental stress suspected.",
-    "Suboptimal foraging. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall. Water conditions may be a factor.",
-    "The specimen appears sluggish. *{recent_avg:.1f}* vs *{overall_avg:.1f}* career. Post-molt lethargy?"
+    "🌊 Performance decline noted. *{recent_avg:.1f}* avg vs *{overall_avg:.1f}* career. Environmental stress suspected.",
+    "🌊 Suboptimal foraging. *{recent_avg:.1f}* recent vs *{overall_avg:.1f}* overall. Water conditions may be a factor.",
+    "🦀 The specimen appears sluggish. *{recent_avg:.1f}* vs *{overall_avg:.1f}* career. Post-molt lethargy?"
   ],
   "personal_best": [
-    "Peak performance: best observed result in {games} foraging sessions.",
-    "A new benchmark. {games} observations and this is the most efficient yet.",
-    "Best performance in {games} sessions. The specimen has optimized its approach."
+    "🦀 Peak performance: best observed result in {games} foraging sessions.",
+    "🦀 A new benchmark. {games} observations and this is the most efficient yet.",
+    "🦀 Best performance in {games} sessions. The specimen has optimized its approach."
   ],
 
   "morning_briefing": [
-    "Tidal conditions along the Northern California coast are favorable this morning. The intertidal zone is active.",
-    "The *Pachygrapsus crassipes* is returning to the upper intertidal with the receding tide. A productive night.",
-    "Dawn along the California coast. The purple shore crabs are settling into crevices after a night of foraging.",
-    "Water temperature is holding steady. The Dungeness crab molt season approaches.",
-    "The *Emerita analoga* — sand crabs — are already filtering the morning surf.",
-    "Ghost crabs have retreated to their burrows ahead of daylight. Smart.",
-    "The kelp forests off the NorCal coast are active this morning. Spider crabs grazing among the holdfasts.",
-    "Shore crab activity peaks at dawn and dusk. The crevices along Bodega Head are bustling.",
-    "Tidepools along the Sonoma coast are refreshing as the morning high tide recedes. A good sign.",
-    "Hermit crabs along the Northern California coast are beginning their daily shell inspections.",
-    "Overnight currents have brought fresh nutrients to the nearshore zone. Foraging conditions: excellent.",
-    "The *Lopholithodes mandtii* — box crab — has buried itself in the sand for the day. As is tradition.",
-    "Morning fog along the coast. The crabs are unbothered. Visibility is irrelevant when you have antennae."
+    "🌊 Tidal conditions along the Northern California coast are favorable this morning. The intertidal zone is active.",
+    "🦀 The *Pachygrapsus crassipes* is returning to the upper intertidal with the receding tide. A productive night.",
+    "🌊 Dawn along the California coast. The purple shore crabs are settling into crevices after a night of foraging.",
+    "🌊 Water temperature is holding steady. The Dungeness crab molt season approaches.",
+    "🦀 The *Emerita analoga* — sand crabs — are already filtering the morning surf.",
+    "🦀 Ghost crabs have retreated to their burrows ahead of daylight. Smart.",
+    "🌊 The kelp forests off the NorCal coast are active this morning. Spider crabs grazing among the holdfasts.",
+    "🦀 Shore crab activity peaks at dawn and dusk. The crevices along Bodega Head are bustling.",
+    "🌊 Tidepools along the Sonoma coast are refreshing as the morning high tide recedes. A good sign.",
+    "🦀 Hermit crabs along the Northern California coast are beginning their daily shell inspections.",
+    "🌊 Overnight currents have brought fresh nutrients to the nearshore zone. Foraging conditions: excellent.",
+    "🦀 The *Lopholithodes mandtii* — box crab — has buried itself in the sand for the day. As is tradition.",
+    "🌊 Morning fog along the coast. The crabs are unbothered. Visibility is irrelevant when you have antennae."
   ],
   "evening_briefing": [
-    "As darkness falls along the Pacific, nocturnal foraging begins across the intertidal zone.",
-    "The *Pachygrapsus crassipes* emerges for its evening forage. Efficient. Reliable.",
-    "Bioluminescent plankton in the deeper waters tonight. The crabs pay no attention. They have work to do.",
-    "Nightfall brings the *Pugettia producta* out of the kelp canopy. Feeding time.",
-    "The ghost crabs venture further from their burrows after sunset. The beach is theirs now.",
-    "Moonlight on the Pacific. The sand crabs continue filtering regardless.",
-    "Shore crabs have expanded their patrol radius now that visual predators have retired.",
-    "The Dungeness fleet would be heading out about now. The crabs are, as always, unimpressed.",
-    "Evening water temperature dropping 1-2C along the shelf. The deeper specimens are adjusting position.",
-    "Under cover of darkness, the hermit crabs begin their nightly shell exchange negotiations.",
-    "The *Hemigrapsus oregonensis* is most active in the next four hours. We will be monitoring.",
-    "Nighttime is when the real work happens in the intertidal. The crabs understand this.",
-    "The porcelain crabs have emerged from beneath their rocks. The evening shift begins."
+    "🌊 As darkness falls along the Pacific, nocturnal foraging begins across the intertidal zone.",
+    "🦀 The *Pachygrapsus crassipes* emerges for its evening forage. Efficient. Reliable.",
+    "🌊 Bioluminescent plankton in the deeper waters tonight. The crabs pay no attention. They have work to do.",
+    "🦀 Nightfall brings the *Pugettia producta* out of the kelp canopy. Feeding time.",
+    "🦀 The ghost crabs venture further from their burrows after sunset. The beach is theirs now.",
+    "🌊 Moonlight on the Pacific. The sand crabs continue filtering regardless.",
+    "🦀 Shore crabs have expanded their patrol radius now that visual predators have retired.",
+    "🌊 The Dungeness fleet would be heading out about now. The crabs are, as always, unimpressed.",
+    "🌊 Evening water temperature dropping 1-2C along the shelf. The deeper specimens are adjusting position.",
+    "🦀 Under cover of darkness, the hermit crabs begin their nightly shell exchange negotiations.",
+    "🦀 The *Hemigrapsus oregonensis* is most active in the next four hours. We will be monitoring.",
+    "🌊 Nighttime is when the real work happens in the intertidal. The crabs understand this.",
+    "🦀 The porcelain crabs have emerged from beneath their rocks. The evening shift begins."
   ],
 
   "shame": [
-    "Concerning: {names} have not emerged from their burrows today. Possible molting in progress.",
-    "No activity detected from {names}. Shell-dwelling behavior at this hour may indicate environmental stress.",
-    "{names}: prolonged burrowing is atypical for this time of year. We're monitoring the situation.",
-    "The colony notes the absence of {names}. Extended retreat behavior warrants observation.",
-    "Still no surface activity from {names}. If they're molting, best not to disturb them. If not — concerning.",
-    "{names} remain below the sediment line. The other crabs have managed to forage today.",
-    "A healthy crab emerges daily. {names} have not emerged. We are withholding judgment. For now.",
-    "The tide has come and gone. {names} were not observed at the surface.",
-    "Field notes: {names} unaccounted for during today's survey. Predation has not been ruled out.",
-    "The research team is mildly concerned about {names}. Burrowing durations exceeding 18 hours are atypical."
+    "🦀 Concerning: {names} have not emerged from their burrows today. Possible molting in progress.",
+    "🦀 No activity detected from {names}. Shell-dwelling behavior at this hour may indicate environmental stress.",
+    "🦀 {names}: prolonged burrowing is atypical for this time of year. We're monitoring the situation.",
+    "🦀 The colony notes the absence of {names}. Extended retreat behavior warrants observation.",
+    "🦀 Still no surface activity from {names}. If they're molting, best not to disturb them. If not — concerning.",
+    "🦀 {names} remain below the sediment line. The other crabs have managed to forage today.",
+    "🦀 A healthy crab emerges daily. {names} have not emerged. We are withholding judgment. For now.",
+    "🌊 The tide has come and gone. {names} were not observed at the surface.",
+    "🦀 Field notes: {names} unaccounted for during today's survey. Predation has not been ruled out.",
+    "🦀 The research team is mildly concerned about {names}. Burrowing durations exceeding 18 hours are atypical."
   ],
 
   "all_played": [
-    "All specimens have surfaced and foraged successfully today. Colony health: optimal.",
-    "Full colony participation detected. The intertidal zone has been thoroughly worked.",
-    "Every member of the colony has reported in. The reef is productive today.",
-    "All specimens accounted for. Foraging efficiency across the colony appears normal.",
-    "The colony has completed its daily survey of the word pool. All survived.",
-    "Full emergence. A sign of healthy habitat conditions and adequate resources."
+    "🦀 All specimens have surfaced and foraged successfully today. Colony health: optimal.",
+    "🦀 Full colony participation detected. The intertidal zone has been thoroughly worked.",
+    "🦀 Every member of the colony has reported in. The reef is productive today.",
+    "🦀 All specimens accounted for. Foraging efficiency across the colony appears normal.",
+    "🦀 The colony has completed its daily survey of the word pool. All survived.",
+    "🦀 Full emergence. A sign of healthy habitat conditions and adequate resources."
   ],
 
   "wrap_intro": [
-    "Evening marine conditions report. Also, your Wordle scores, which some of you seem to care about.",
-    "The sun sets over the Pacific. The crabs are stirring. Here are today's results, I suppose.",
-    "Nighttime activity has commenced along the coast. In less important news, today's Wordle:",
-    "The swell has settled for the evening. Time to review the colony's puzzle performance.",
-    "Marine forecast is stable. Now, these scores:",
-    "End of day field report. Marine observations first, then the Wordle data.",
-    "The research station logs the following. Marine conditions are detailed below. Wordle results are also, unfortunately, included."
+    "🌊 Evening marine conditions report. Also, your Wordle scores, which some of you seem to care about.",
+    "🌊 The sun sets over the Pacific. The crabs are stirring. Here are today's results, I suppose.",
+    "🦀 Nighttime activity has commenced along the coast. In less important news, today's Wordle:",
+    "🌊 The swell has settled for the evening. Time to review the colony's puzzle performance.",
+    "🌊 Marine forecast is stable. Now, these scores:",
+    "🦀 End of day field report. Marine observations first, then the Wordle data.",
+    "🦀 The research station logs the following. Marine conditions are detailed below. Wordle results are also, unfortunately, included."
   ],
 
   "difficulty": {
-    "easy": "An easy forage. Barely had to leave the burrow.",
-    "solid": "Required some lateral movement across the reef. A solid day's work.",
-    "tough": "Treacherous conditions out there. Many crabs struggled today.",
-    "brutal": "A catastrophic molt day. Conditions were hostile."
+    "easy": "🦀 An easy forage. Barely had to leave the burrow.",
+    "solid": "🦀 Required some lateral movement across the reef. A solid day's work.",
+    "tough": "🌊 Treacherous conditions out there. Many crabs struggled today.",
+    "brutal": "🦀 A catastrophic molt day. Conditions were hostile."
   },
 
   "weekly_intro": [
-    "Weekly colony assessment. The dominant specimen has been identified.",
-    "Seven-day field survey complete. Population ranking follows.",
-    "The weekly territorial evaluation is concluded. Results:"
+    "🦀 Weekly colony assessment. The dominant specimen has been identified.",
+    "🦀 Seven-day field survey complete. Population ranking follows.",
+    "🦀 The weekly territorial evaluation is concluded. Results:"
   ],
   "monthly_intro": [
-    "End of month field notes. Population performance summary for the research log.",
-    "Monthly colony census complete. Behavioral data has been compiled.",
-    "The monthly marine survey concludes. Colony standings are as follows."
+    "🦀 End of month field notes. Population performance summary for the research log.",
+    "🦀 Monthly colony census complete. Behavioral data has been compiled.",
+    "🦀 The monthly marine survey concludes. Colony standings are as follows."
   ],
   "yearly_intro": [
-    "Annual marine census report. Colony statistics have been finalized.",
-    "The yearly population assessment is complete. We present the findings.",
-    "Year-end field report. The colony's annual performance has been documented."
+    "🦀 Annual marine census report. Colony statistics have been finalized.",
+    "🦀 The yearly population assessment is complete. We present the findings.",
+    "🦀 Year-end field report. The colony's annual performance has been documented."
   ],
 
   "general_facts": [
-    "The Japanese spider crab has a leg span of up to 3.7 meters. The largest living arthropod. Worth knowing.",
-    "Horseshoe crabs are not true crabs. They're more closely related to spiders. This changes nothing about our work here.",
-    "The coconut crab can lift up to 28 kg. The strongest grip of any crustacean. Relevant to today's difficulty, arguably.",
-    "Crabs have been walking sideways for approximately 200 million years. If the approach works, don't fix it.",
-    "The yeti crab farms bacteria on its own claws for sustenance. Self-sufficient. Unlike some members of this colony.",
-    "A female blue crab mates only once but stores sperm for multiple clutches. Efficient resource management.",
-    "The decorator crab attaches sponges and algae to its shell for camouflage. Methodical. Strategic.",
-    "Fiddler crabs regenerate lost claws. The replacement is always smaller. Adaptation has costs.",
-    "The pea crab lives inside oysters and mussels. A controversial lifestyle choice, but effective.",
-    "Red king crabs can live up to 30 years in cold waters. Longevity rewards consistency.",
-    "Sally Lightfoot crabs can run in all four directions simultaneously. Versatile.",
-    "Crabs communicate through drumming and claw-waving. Complex signals. No vocalization needed.",
-    "The Dungeness crab fishery contributes approximately $220 million annually to the West Coast economy. The crabs receive none of it.",
-    "The porcelain crab has the fastest appendage movement in the animal kingdom. Faster than the mantis shrimp by acceleration.",
-    "The *Cardisoma guanhumi* can migrate up to 8 km from the ocean and still return. Impressive navigation."
+    "🦀 The Japanese spider crab has a leg span of up to 3.7 meters. The largest living arthropod. Worth knowing.",
+    "🦀 Horseshoe crabs are not true crabs. They're more closely related to spiders. This changes nothing about our work here.",
+    "🦀 The coconut crab can lift up to 28 kg. The strongest grip of any crustacean. Relevant to today's difficulty, arguably.",
+    "🦀 Crabs have been walking sideways for approximately 200 million years. If the approach works, don't fix it.",
+    "🦀 The yeti crab farms bacteria on its own claws for sustenance. Self-sufficient. Unlike some members of this colony.",
+    "🦀 A female blue crab mates only once but stores sperm for multiple clutches. Efficient resource management.",
+    "🦀 The decorator crab attaches sponges and algae to its shell for camouflage. Methodical. Strategic.",
+    "🦀 Fiddler crabs regenerate lost claws. The replacement is always smaller. Adaptation has costs.",
+    "🦀 The pea crab lives inside oysters and mussels. A controversial lifestyle choice, but effective.",
+    "🦀 Red king crabs can live up to 30 years in cold waters. Longevity rewards consistency.",
+    "🦀 Sally Lightfoot crabs can run in all four directions simultaneously. Versatile.",
+    "🦀 Crabs communicate through drumming and claw-waving. Complex signals. No vocalization needed.",
+    "🦀 The Dungeness crab fishery contributes approximately $220 million annually to the West Coast economy. The crabs receive none of it.",
+    "🦀 The porcelain crab has the fastest appendage movement in the animal kingdom. Faster than the mantis shrimp by acceleration.",
+    "🦀 The *Cardisoma guanhumi* can migrate up to 8 km from the ocean and still return. Impressive navigation."
   ],
 
   "surf_spots": {
@@ -688,13 +688,8 @@ class TestAltModeCommentary(unittest.TestCase):
         }
         shame, has_missing = build_shame_list(scores)
         self.assertTrue(has_missing)
-        found_alt = any(
-            phrase in shame
-            for phrase in ["emerged", "burrow", "molting", "colony", "sediment",
-                           "surface", "observation", "burrowing", "tide",
-                           "Predation", "survey", "specimen"]
-        )
-        self.assertTrue(found_alt, f"Shame message doesn't look alt-themed: {shame}")
+        has_crab_emoji = "🦀" in shame or "🌊" in shame
+        self.assertTrue(has_crab_emoji, f"Shame message missing crab/wave emoji: {shame}")
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
