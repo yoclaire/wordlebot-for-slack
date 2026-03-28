@@ -82,6 +82,60 @@ def fetch_wordle_answer(puzzle_date: date) -> str | None:
         return None
 
 
+_SURF_SPOTS = {
+    "Mavericks": (37.4936, -122.4967),
+    "Ocean Beach": (37.7609, -122.5108),
+    "Steamer Lane": (36.9519, -122.0261),
+    "Linda Mar": (37.5966, -122.5014),
+    "Pleasure Point": (36.9633, -121.9753),
+    "Bolinas": (37.9094, -122.6858),
+    "Fort Point": (37.8106, -122.4770),
+    "Stinson Beach": (37.8999, -122.6420),
+}
+
+
+def _format_conditions(data: dict, spot_name: str) -> str:
+    """Format marine API response into a conditions report."""
+    current = data.get("current", {})
+    wave_h = current.get("wave_height")
+    swell_h = current.get("swell_wave_height")
+    swell_p = current.get("swell_wave_period")
+    swell_d = current.get("swell_wave_direction")
+
+    if wave_h is None:
+        return f"*{spot_name}*: No data available."
+
+    dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    compass = dirs[round(swell_d / 22.5) % 16] if swell_d is not None else ""
+
+    if swell_h is not None and swell_p is not None:
+        return (
+            f"*{spot_name}*: {swell_h}m swell at {swell_p}s from the {compass}. "
+            f"Combined wave height {wave_h}m."
+        )
+    return f"*{spot_name}*: {wave_h}m wave height."
+
+
+def _fetch_marine_conditions() -> str | None:
+    """Fetch current marine conditions for a random surf spot."""
+    spot_name = random.choice(list(_SURF_SPOTS.keys()))
+    lat, lon = _SURF_SPOTS[spot_name]
+    url = (
+        f"https://marine-api.open-meteo.com/v1/marine?"
+        f"latitude={lat}&longitude={lon}"
+        f"&current=wave_height,swell_wave_height,swell_wave_period,swell_wave_direction"
+    )
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "wordlebot"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        return _format_conditions(data, spot_name)
+    except Exception as e:
+        logging.warning(f"Could not fetch marine conditions: {e}")
+        return None
+
+
 def lookup_user_by_name(name: str) -> str | None:
     """Look up a Slack user ID by display name, username, or real name."""
     try:

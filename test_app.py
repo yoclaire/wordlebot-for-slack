@@ -744,5 +744,44 @@ class TestApplyDiacritics(unittest.TestCase):
         self.assertEqual(result, "123")
 
 
+class TestFormatConditions(unittest.TestCase):
+    def test_formats_full_data(self):
+        data = {
+            "current": {
+                "wave_height": 1.5,
+                "swell_wave_height": 1.2,
+                "swell_wave_period": 9.5,
+                "swell_wave_direction": 280,
+            }
+        }
+        result = _format_conditions(data, "Mavericks")
+        self.assertIn("Mavericks", result)
+        self.assertIn("1.2m", result)
+        self.assertIn("9.5s", result)
+
+    def test_wave_height_only(self):
+        data = {"current": {"wave_height": 2.0}}
+        result = _format_conditions(data, "Ocean Beach")
+        self.assertIn("Ocean Beach", result)
+        self.assertIn("2.0m", result)
+
+    def test_missing_current(self):
+        result = _format_conditions({}, "Bolinas")
+        self.assertIn("No data", result)
+
+    def test_direction_conversion(self):
+        # 270 degrees = W
+        data = {
+            "current": {
+                "wave_height": 1.0,
+                "swell_wave_height": 0.8,
+                "swell_wave_period": 8.0,
+                "swell_wave_direction": 270,
+            }
+        }
+        result = _format_conditions(data, "Fort Point")
+        self.assertIn("W", result)
+
+
 if __name__ == "__main__":
     unittest.main()
