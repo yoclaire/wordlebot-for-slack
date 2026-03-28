@@ -85,16 +85,7 @@ def fetch_wordle_answer(puzzle_date: date) -> str | None:
         return None
 
 
-_SURF_SPOTS = {
-    "Mavericks": (37.4936, -122.4967),
-    "Ocean Beach": (37.7609, -122.5108),
-    "Steamer Lane": (36.9519, -122.0261),
-    "Linda Mar": (37.5966, -122.5014),
-    "Pleasure Point": (36.9633, -121.9753),
-    "Bolinas": (37.9094, -122.6858),
-    "Fort Point": (37.8106, -122.4770),
-    "Stinson Beach": (37.8999, -122.6420),
-}
+_SURF_SPOTS = {k: tuple(v) for k, v in SUPPLEMENTAL.get("surf_spots", {}).items()}
 
 
 def _format_conditions(data: dict, spot_name: str) -> str:
