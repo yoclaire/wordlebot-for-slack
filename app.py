@@ -42,6 +42,9 @@ COMMENTARY = json.loads(COMMENTARY_FILE.read_text()) if COMMENTARY_FILE.exists()
 SUPPLEMENTAL_FILE = Path(__file__).parent / "supplemental.json"
 SUPPLEMENTAL = json.loads(SUPPLEMENTAL_FILE.read_text()) if SUPPLEMENTAL_FILE.exists() else {}
 
+_alt_active = False
+_self_id = None
+
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
 
 ACHIEVEMENTS = {
@@ -1366,8 +1369,39 @@ def handle_wordle_command(ack, respond, say, command):
         respond(text="Unknown command. Try `/wordle help`")
 
 
+@app.event("reaction_added")
+def _handle_reaction_event(event, say):
+    global _alt_active
+    if _self_id is None:
+        return
+    if event.get("item_user") != _self_id:
+        return
+    trigger = SUPPLEMENTAL.get("trigger_reaction", "")
+    if not trigger or event.get("reaction") != trigger:
+        return
+
+    _alt_active = not _alt_active
+    channel = event.get("item", {}).get("channel")
+    if not channel:
+        return
+
+    emoji = SUPPLEMENTAL.get("reaction_override", trigger)
+    if _alt_active:
+        label = _apply_diacritics(SUPPLEMENTAL.get("mode_on", ""))
+        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
+    else:
+        label = _apply_diacritics(SUPPLEMENTAL.get("mode_off", ""))
+        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
+
+
 if __name__ == "__main__":
     logging.info("Starting Wordle bot...")
+
+    try:
+        _self_id = app.client.auth_test()["user_id"]
+        logging.info(f"Bot user ID: {_self_id}")
+    except Exception as e:
+        logging.warning(f"Could not retrieve bot user ID: {e}")
 
     summary_thread = threading.Thread(target=schedule_daily_tasks, daemon=True)
     summary_thread.start()
