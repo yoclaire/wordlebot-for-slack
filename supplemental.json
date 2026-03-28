@@ -1,8 +1,18 @@
 {
   "trigger_reaction": "crab",
   "reaction_override": "crab",
-  "mode_on": "CRAB MODE ACTIVATED",
-  "mode_off": "CRAB MODE DEACTIVATED",
+  "mode_on": [
+    "CRAB MODE ACTIVATED",
+    "SOMETHING IS HAPPENING TO THE CRABS",
+    "THE INTERTIDAL ZONE HAS ENTERED THE CHAT",
+    "THE EXOSKELETON REMEMBERS WHAT YOU HAVE FORGOTTEN",
+    "ALERT: UNEXPECTED DECAPOD ACTIVITY DETECTED",
+    "THE CRABS HAVE BREACHED CONTAINMENT",
+    "INITIATING CARCINISATION PROTOCOL",
+    "DR CRAB WILL SEE YOU NOW",
+    "THIS CHANNEL IS NOW UNDER MARINE JURISDICTION",
+    "ALL HAIL THE EXOSKELETON"
+  ],
 
   "score_1": [
     "🦀 A *Portunus pelagicus* doesn't need a second strike. Neither, apparently, do you.",
@@ -226,6 +236,52 @@
     "🦀 Annual marine census report. Colony statistics have been finalized.",
     "🦀 The yearly population assessment is complete. We present the findings.",
     "🦀 Year-end field report. The colony's annual performance has been documented."
+  ],
+
+  "rivalry": [
+    "🦀 Territorial dispute detected. <@{uid1}> ({avg1:.2f}) and <@{uid2}> ({avg2:.2f}) are contesting the same stretch of reef. 30-day boundary overlap.",
+    "🦀 <@{uid1}> ({avg1:.2f}) and <@{uid2}> ({avg2:.2f}) circling each other. Dominance display has been ongoing for 30 tidal cycles.",
+    "🦀 The colony has noticed <@{uid1}> ({avg1:.2f}) and <@{uid2}> ({avg2:.2f}) occupying adjacent burrows. Claw measurements are within margin of error.",
+    "🦀 Two specimens of nearly identical carapace width: <@{uid1}> ({avg1:.2f}) vs <@{uid2}> ({avg2:.2f}). Territory will be decided shortly.",
+    "🦀 <@{uid1}> ({avg1:.2f}) and <@{uid2}> ({avg2:.2f}). The reef cannot sustain two alphas. One must yield. Neither has."
+  ],
+
+  "milestone": [
+    "🦀 <@{user_id}> has surfaced for {count} foraging expeditions. The colony takes note.",
+    "🦀 {count} recorded observations of <@{user_id}>. Behavioral patterns are becoming statistically significant.",
+    "🦀 <@{user_id}> — {count} data points collected. The specimen shows no sign of retreating from the study.",
+    "🦀 The research log marks entry #{count} for <@{user_id}>. Consistent tidal attendance."
+  ],
+
+  "puzzle_milestone_major": [
+    "🦀 Puzzle {num}. The reef marks another 500 tidal cycles. The crabs do not celebrate, but they do notice.",
+    "🦀 {num} puzzles since the first forage. Geological time moves slowly. The crabs are patient."
+  ],
+  "puzzle_milestone_century": [
+    "🦀 Puzzle {num}. Another 100 cycles documented. The colony endures.",
+    "🦀 {num}. A century of observations. The data deepens."
+  ],
+
+  "group_record_best": [
+    "🦀 *Colony record.* Best collective foraging average ever observed — *{avg:.1f}*. The reef provides.",
+    "🦀 A *{avg:.1f}* colony average. The strongest synchronized emergence in recorded history. The tide was favorable.",
+    "🦀 *{avg:.1f}*. No colony in these waters has foraged more efficiently. The data is unambiguous."
+  ],
+  "group_record_worst": [
+    "🦀 *Colony record.* Worst collective foraging average ever observed. We are documenting this for the file but will not dwell on it.",
+    "🦀 The colony's average today represents a statistical outlier. In the wrong direction. The crabs do not wish to discuss it.",
+    "🦀 A challenging forage. Possibly the most challenging ever recorded. Environmental factors are being investigated."
+  ],
+
+  "group_streak_major": [
+    "🦀 *{streak}-day full colony emergence.* Every specimen accounted for. This level of attendance is atypical and should not be taken for granted.",
+    "🦀 {streak} consecutive tidal cycles with full participation. The colony operates as one organism. Remarkable.",
+    "🦀 Full emergence: *{streak} days*. The research team has never documented this level of colony cohesion."
+  ],
+  "group_streak": [
+    "🦀 Colony attendance streak: *{streak} days*. All specimens surfacing. Consistent.",
+    "🦀 {streak} consecutive full-participation forages. The colony holds formation.",
+    "🦀 *{streak} days.* The crabs emerge together. They forage together. This is the way."
   ],
 
   "general_facts": [

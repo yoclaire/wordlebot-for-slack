@@ -43,6 +43,8 @@ SUPPLEMENTAL_FILE = Path(__file__).parent / "supplemental.json"
 SUPPLEMENTAL = json.loads(SUPPLEMENTAL_FILE.read_text()) if SUPPLEMENTAL_FILE.exists() else {}
 
 _alt_active = False
+_alt_activated_at = None
+_alt_channel = None
 _self_id = None
 
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
@@ -272,9 +274,18 @@ def _apply_diacritics(text: str) -> str:
     return "".join(result)
 
 
+def _deactivate_alt_mode():
+    global _alt_active, _alt_activated_at, _alt_channel
+    _alt_active = False
+    _alt_activated_at = None
+    _alt_channel = None
+
+
 def check_milestone(scores: dict, user_id: str) -> str | None:
     count = sum(1 for p in scores.values() if user_id in p)
     if count in MILESTONES:
+        if _alt_active and "milestone" in SUPPLEMENTAL:
+            return random.choice(SUPPLEMENTAL["milestone"]).format(user_id=user_id, count=count)
         return f"🎉 <@{user_id}> just logged Wordle #{count}!"
     return None
 
@@ -400,6 +411,9 @@ def check_rivalry(scores: dict) -> str | None:
         uid1, avg1 = ranked[i]
         uid2, avg2 = ranked[i + 1]
         if abs(avg1 - avg2) <= 0.15:
+            if _alt_active and "rivalry" in SUPPLEMENTAL:
+                templates = SUPPLEMENTAL["rivalry"]
+                return random.choice(templates).format(uid1=uid1, avg1=avg1, uid2=uid2, avg2=avg2)
             return (
                 f"⚔️ *Rivalry alert!* <@{uid1}> ({avg1:.2f}) vs "
                 f"<@{uid2}> ({avg2:.2f}) — neck and neck over the last 30 puzzles"
@@ -833,8 +847,12 @@ def check_group_records(scores: dict) -> str | None:
     all_avgs = [avg for _, avg in puzzle_avgs]
 
     if latest_avg <= min(all_avgs) and all_avgs.count(latest_avg) == 1:
+        if _alt_active and "group_record_best" in SUPPLEMENTAL:
+            return random.choice(SUPPLEMENTAL["group_record_best"]).format(avg=latest_avg)
         return f"🏆 *New group record!* Best group average ever — *{latest_avg:.1f}*"
     if latest_avg >= max(all_avgs) and all_avgs.count(latest_avg) == 1:
+        if _alt_active and "group_record_worst" in SUPPLEMENTAL:
+            return random.choice(SUPPLEMENTAL["group_record_worst"])
         return "📉 *New group record...* worst group average ever. we don't talk about this one."
 
     return None
@@ -860,8 +878,12 @@ def check_puzzle_milestone(puzzle_num: str) -> str | None:
     """Check if this puzzle number is a milestone worth celebrating."""
     num = int(puzzle_num.replace(",", ""))
     if num % 500 == 0:
+        if _alt_active and "puzzle_milestone_major" in SUPPLEMENTAL:
+            return random.choice(SUPPLEMENTAL["puzzle_milestone_major"]).format(num=num)
         return f"🎊 *Puzzle {num}!* A major Wordle milestone!"
     if num % 100 == 0:
+        if _alt_active and "puzzle_milestone_century" in SUPPLEMENTAL:
+            return random.choice(SUPPLEMENTAL["puzzle_milestone_century"]).format(num=num)
         return f"🎯 *Puzzle {num}!* Another century of Wordles."
     return None
 
@@ -1120,15 +1142,17 @@ def post_all_played_summary(channel_id: str, scores: dict):
     # Group streak
     group_streak = get_group_streak(scores)
     if group_streak >= 3 and group_streak % 5 == 0:
-        app.client.chat_postMessage(
-            channel=channel_id,
-            text=f"🤝 *{group_streak}-day group streak!* Everyone's been showing up. Don't be the one to break it.",
-        )
+        if _alt_active and "group_streak_major" in SUPPLEMENTAL:
+            text = random.choice(SUPPLEMENTAL["group_streak_major"]).format(streak=group_streak)
+        else:
+            text = f"🤝 *{group_streak}-day group streak!* Everyone's been showing up. Don't be the one to break it."
+        app.client.chat_postMessage(channel=channel_id, text=text)
     elif group_streak >= 3:
-        app.client.chat_postMessage(
-            channel=channel_id,
-            text=f"🤝 group streak: *{group_streak} days* and counting.",
-        )
+        if _alt_active and "group_streak" in SUPPLEMENTAL:
+            text = random.choice(SUPPLEMENTAL["group_streak"]).format(streak=group_streak)
+        else:
+            text = f"🤝 group streak: *{group_streak} days* and counting."
+        app.client.chat_postMessage(channel=channel_id, text=text)
 
 
 def schedule_daily_tasks():
@@ -1161,6 +1185,11 @@ def schedule_daily_tasks():
             channel_id = config.get("wordle_channel")
             if not channel_id:
                 continue
+
+            # Expire crab mode after 24 hours
+            if _alt_active and _alt_activated_at is not None:
+                if datetime.now() - _alt_activated_at > timedelta(hours=24):
+                    _deactivate_alt_mode()
 
             scores = load_scores()
             now = datetime.now()
@@ -1463,7 +1492,7 @@ def handle_wordle_command(ack, respond, say, command):
 
 @app.event("reaction_added")
 def _handle_reaction_event(event, say):
-    global _alt_active
+    global _alt_active, _alt_activated_at, _alt_channel
     if _self_id is None:
         return
     if event.get("item_user") != _self_id:
@@ -1471,19 +1500,20 @@ def _handle_reaction_event(event, say):
     trigger = SUPPLEMENTAL.get("trigger_reaction", "")
     if not trigger or event.get("reaction") != trigger:
         return
+    if _alt_active:
+        return
 
-    _alt_active = not _alt_active
+    _alt_active = True
+    _alt_activated_at = datetime.now()
     channel = event.get("item", {}).get("channel")
+    _alt_channel = channel
     if not channel:
         return
 
     emoji = SUPPLEMENTAL.get("reaction_override", trigger)
-    if _alt_active:
-        label = _apply_diacritics(SUPPLEMENTAL.get("mode_on", ""))
-        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
-    else:
-        label = _apply_diacritics(SUPPLEMENTAL.get("mode_off", ""))
-        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
+    activations = SUPPLEMENTAL.get("mode_on", [])
+    label = _apply_diacritics(random.choice(activations) if activations else "")
+    app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
 
 
 if __name__ == "__main__":
