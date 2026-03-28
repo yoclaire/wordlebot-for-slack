@@ -39,6 +39,12 @@ RANK_ICONS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣"
 COMMENTARY_FILE = Path(__file__).parent / "commentary.json"
 COMMENTARY = json.loads(COMMENTARY_FILE.read_text()) if COMMENTARY_FILE.exists() else {}
 
+SUPPLEMENTAL_FILE = Path(__file__).parent / "supplemental.json"
+SUPPLEMENTAL = json.loads(SUPPLEMENTAL_FILE.read_text()) if SUPPLEMENTAL_FILE.exists() else {}
+
+_alt_active = False
+_self_id = None
+
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
 
 ACHIEVEMENTS = {
@@ -76,6 +82,51 @@ def fetch_wordle_answer(puzzle_date: date) -> str | None:
             return data.get("solution")
     except Exception as e:
         logging.warning(f"Could not fetch Wordle answer for {puzzle_date}: {e}")
+        return None
+
+
+_SURF_SPOTS = {k: tuple(v) for k, v in SUPPLEMENTAL.get("surf_spots", {}).items()}
+
+
+def _format_conditions(data: dict, spot_name: str) -> str:
+    """Format marine API response into a conditions report."""
+    current = data.get("current", {})
+    wave_h = current.get("wave_height")
+    swell_h = current.get("swell_wave_height")
+    swell_p = current.get("swell_wave_period")
+    swell_d = current.get("swell_wave_direction")
+
+    if wave_h is None:
+        return f"*{spot_name}*: No data available."
+
+    dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    compass = dirs[round(swell_d / 22.5) % 16] if swell_d is not None else ""
+
+    if swell_h is not None and swell_p is not None:
+        return (
+            f"*{spot_name}*: {swell_h}m swell at {swell_p}s from the {compass}. "
+            f"Combined wave height {wave_h}m."
+        )
+    return f"*{spot_name}*: {wave_h}m wave height."
+
+
+def _fetch_marine_conditions() -> str | None:
+    """Fetch current marine conditions for a random surf spot."""
+    spot_name = random.choice(list(_SURF_SPOTS.keys()))
+    lat, lon = _SURF_SPOTS[spot_name]
+    url = (
+        f"https://marine-api.open-meteo.com/v1/marine?"
+        f"latitude={lat}&longitude={lon}"
+        f"&current=wave_height,swell_wave_height,swell_wave_period,swell_wave_direction"
+    )
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "wordlebot"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        return _format_conditions(data, spot_name)
+    except Exception as e:
+        logging.warning(f"Could not fetch marine conditions: {e}")
         return None
 
 
@@ -200,8 +251,25 @@ def get_user_stats(scores: dict, user_id: str) -> dict | None:
 
 def get_commentary(score: str) -> str | None:
     key = f"score_{score}" if score != "X" else "score_x"
-    templates = COMMENTARY.get(key, [])
+    source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+    templates = source.get(key, [])
     return random.choice(templates) if templates else None
+
+
+def _apply_diacritics(text: str) -> str:
+    """Add combining diacritical marks to alphabetic characters."""
+    _marks = [
+        "\u0300", "\u0301", "\u0302", "\u0303", "\u0304", "\u0305",
+        "\u0306", "\u0307", "\u0308", "\u030a", "\u030b", "\u030c",
+        "\u0327", "\u0328", "\u0330", "\u0331", "\u0332", "\u0333",
+    ]
+    result = []
+    for char in text:
+        result.append(char)
+        if char.isalpha():
+            for _ in range(random.randint(1, 3)):
+                result.append(random.choice(_marks))
+    return "".join(result)
 
 
 def check_milestone(scores: dict, user_id: str) -> str | None:
@@ -216,12 +284,14 @@ def check_streak(scores: dict, user_id: str) -> str | None:
     current, _ = calc_streak(puzzles)
     if current >= 7 and current % 7 == 0:
         key = "streak_epic" if current >= 14 else "streak_hot"
-        templates = COMMENTARY.get(key, [])
+        source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+        templates = source.get(key, [])
         if templates:
             return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> is on a *{current}-day streak*!"
     if current == 3:
-        templates = COMMENTARY.get("streak_building", [])
+        source = SUPPLEMENTAL if _alt_active and "streak_building" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("streak_building", [])
         if templates:
             return f"<@{user_id}> — " + random.choice(templates).format(streak=current)
         return f"🔥 <@{user_id}> — 3-day streak going!"
@@ -240,12 +310,14 @@ def check_hot_cold(scores: dict, user_id: str) -> str | None:
     overall_avg = stats["avg"]
     diff = overall_avg - recent_avg
     if diff >= 1.0:
-        templates = COMMENTARY.get("hot_hand", [])
+        source = SUPPLEMENTAL if _alt_active and "hot_hand" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("hot_hand", [])
         if templates:
             return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📈 <@{user_id}> is heating up — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
     if diff <= -1.0:
-        templates = COMMENTARY.get("cold_spell", [])
+        source = SUPPLEMENTAL if _alt_active and "cold_spell" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("cold_spell", [])
         if templates:
             return f"<@{user_id}> " + random.choice(templates).format(recent_avg=recent_avg, overall_avg=overall_avg)
         return f"📉 <@{user_id}> going through it — *{recent_avg:.1f}* avg recently vs *{overall_avg:.1f}* overall"
@@ -400,7 +472,12 @@ def build_daily_summary(scores: dict) -> str | None:
         ),
     )
 
-    lines = [f"*Wordle {latest} Results*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("wrap_intro", [])
+        header = random.choice(intros) if intros else f"*Puzzle {latest}*"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"*Wordle {latest} Results*\n"]
     prev_key = None
     current_rank = 0
     for i, (user_id, data) in enumerate(ranked):
@@ -417,14 +494,28 @@ def build_daily_summary(scores: dict) -> str | None:
     all_scores = [7 if d["score"] == "X" else int(d["score"]) for d in puzzle_scores.values()]
     if all_scores:
         avg = sum(all_scores) / len(all_scores)
-        if avg <= 3.0:
-            lines.append("\n🟢 easy one today")
-        elif avg <= 4.0:
-            lines.append("\n🟡 solid challenge")
-        elif avg <= 5.0:
-            lines.append("\n🟠 tough one today")
+        if _alt_active:
+            diff = SUPPLEMENTAL.get("difficulty", {})
+            if avg <= 3.0:
+                lines.append(f"\n{diff.get('easy', '')}")
+            elif avg <= 4.0:
+                lines.append(f"\n{diff.get('solid', '')}")
+            elif avg <= 5.0:
+                lines.append(f"\n{diff.get('tough', '')}")
+            else:
+                lines.append(f"\n{diff.get('brutal', '')}")
+            facts = SUPPLEMENTAL.get("general_facts", [])
+            if facts:
+                lines.append(f"\n_{random.choice(facts)}_")
         else:
-            lines.append("\n🔴 brutal. absolute brutality.")
+            if avg <= 3.0:
+                lines.append("\n🟢 easy one today")
+            elif avg <= 4.0:
+                lines.append("\n🟡 solid challenge")
+            elif avg <= 5.0:
+                lines.append("\n🟠 tough one today")
+            else:
+                lines.append("\n🔴 brutal. absolute brutality.")
 
     return "\n".join(lines)
 
@@ -592,7 +683,8 @@ def build_shame_list(scores: dict) -> tuple[str, bool]:
         return "Everyone's played today! 🎉", False
 
     names = ", ".join(f"<@{uid}>" for uid in missing)
-    templates = COMMENTARY.get("shame", ["{names}: play wordle already"])
+    source = SUPPLEMENTAL if _alt_active and "shame" in SUPPLEMENTAL else COMMENTARY
+    templates = source.get("shame", ["{names}: play wordle already"])
     return random.choice(templates).format(names=names), True
 
 
@@ -621,12 +713,14 @@ def check_comeback(scores: dict, user_id: str, puzzle_num: str) -> str | None:
     curr = 7 if curr_str == "X" else int(curr_str)
 
     if prev >= 6 and curr <= 3:
-        templates = COMMENTARY.get("comeback_strong", [])
+        source = SUPPLEMENTAL if _alt_active and "comeback_strong" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("comeback_strong", [])
         if templates:
             return random.choice(templates).format(prev_score=prev_str, score=curr_str)
         return f"📈 comeback! {prev_str}/6 → {curr_str}/6"
     if prev >= 5 and curr < prev:
-        templates = COMMENTARY.get("comeback_ok", [])
+        source = SUPPLEMENTAL if _alt_active and "comeback_ok" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("comeback_ok", [])
         if templates:
             return random.choice(templates).format(prev_score=prev_str, score=curr_str)
     return None
@@ -647,7 +741,8 @@ def check_personal_best(scores: dict, user_id: str) -> str | None:
         return None
 
     if current < min(recent):
-        templates = COMMENTARY.get("personal_best", [])
+        source = SUPPLEMENTAL if _alt_active and "personal_best" in SUPPLEMENTAL else COMMENTARY
+        templates = source.get("personal_best", [])
         if templates:
             return random.choice(templates).format(games=len(recent))
         return f"🏅 best score in {len(recent)} games!"
@@ -675,7 +770,8 @@ def get_smart_commentary(scores: dict, user_id: str, puzzle_num: str, score: str
             key = "hard_mode_good"
         else:
             key = "hard_mode_survive"
-        templates = COMMENTARY.get(key, [])
+        source = SUPPLEMENTAL if _alt_active and key in SUPPLEMENTAL else COMMENTARY
+        templates = source.get(key, [])
         if templates:
             context.append(random.choice(templates))
 
@@ -689,7 +785,8 @@ def get_smart_commentary(scores: dict, user_id: str, puzzle_num: str, score: str
         _, puzzles = get_user_scores(scores, user_id)
         current_streak, _ = calc_streak(puzzles)
         if current_streak >= 3:
-            templates = COMMENTARY.get("close_call_on_streak", [])
+            source = SUPPLEMENTAL if _alt_active and "close_call_on_streak" in SUPPLEMENTAL else COMMENTARY
+            templates = source.get("close_call_on_streak", [])
             if templates:
                 context.append(random.choice(templates).format(streak=current_streak))
 
@@ -828,14 +925,22 @@ def build_monthly_recap(scores: dict, year: int, month: int) -> str | None:
         return None
 
     month_name = calendar.month_name[month]
-    lines = [f"📅 *{month_name} {year} Recap*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("monthly_intro", [])
+        header = random.choice(intros) if intros else f"Monthly report: {month_name} {year}"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"📅 *{month_name} {year} Recap*\n"]
 
     standings, ranked = _build_period_standings(player_stats)
 
     # Champion
     champ_id, champ_scores = ranked[0]
     champ_avg = sum(champ_scores) / len(champ_scores)
-    lines.append(f"👑 *Champion:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    if _alt_active:
+        lines.append(f"🦀 *Dominant specimen:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} foraging sessions\n")
+    else:
+        lines.append(f"👑 *Champion:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
     lines.append("*Standings:*")
     lines.extend(standings)
     lines.append("")
@@ -862,6 +967,11 @@ def build_monthly_recap(scores: dict, year: int, month: int) -> str | None:
     group_avg = sum(all_scores) / len(all_scores)
     lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(month_scores)} puzzles")
 
+    if _alt_active:
+        facts = SUPPLEMENTAL.get("general_facts", [])
+        if facts:
+            lines.append(f"\n_{random.choice(facts)}_")
+
     return "\n".join(lines)
 
 
@@ -884,12 +994,20 @@ def build_yearly_recap(scores: dict, year: int) -> str | None:
     if not player_stats:
         return None
 
-    lines = [f"🎆 *{year} Wordle Year in Review*\n"]
+    if _alt_active:
+        intros = SUPPLEMENTAL.get("yearly_intro", [])
+        header = random.choice(intros) if intros else f"Annual report: {year}"
+        lines = [f"{header}\n"]
+    else:
+        lines = [f"🎆 *{year} Wordle Year in Review*\n"]
     standings, ranked = _build_period_standings(player_stats)
 
     champ_id, champ_scores = ranked[0]
     champ_avg = sum(champ_scores) / len(champ_scores)
-    lines.append(f"👑 *Player of the Year:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
+    if _alt_active:
+        lines.append(f"🦀 *Alpha specimen:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} sessions\n")
+    else:
+        lines.append(f"👑 *Player of the Year:* <@{champ_id}> — avg *{champ_avg:.1f}* over {len(champ_scores)} games\n")
     lines.append("*Final Standings:*")
     lines.extend(standings)
     lines.append("")
@@ -931,6 +1049,11 @@ def build_yearly_recap(scores: dict, year: int) -> str | None:
     group_avg = sum(all_scores) / len(all_scores)
     lines.append(f"\n📊 *Group average:* *{group_avg:.1f}* across {len(year_scores)} puzzles")
     lines.append(f"🧑‍🤝‍🧑 *Active players:* {len(player_stats)}")
+
+    if _alt_active:
+        facts = SUPPLEMENTAL.get("general_facts", [])
+        if facts:
+            lines.append(f"\n_{random.choice(facts)}_")
 
     return "\n".join(lines)
 
@@ -975,7 +1098,8 @@ def post_all_played_summary(channel_id: str, scores: dict):
     config["last_all_played_puzzle"] = latest
     save_config(config)
 
-    templates = COMMENTARY.get("all_played", ["Everyone's in! Let's see how you all did."])
+    source = SUPPLEMENTAL if _alt_active and "all_played" in SUPPLEMENTAL else COMMENTARY
+    templates = source.get("all_played", ["Everyone's in! Let's see how you all did."])
     app.client.chat_postMessage(
         channel=channel_id,
         text=random.choice(templates) + "\n",
@@ -1042,16 +1166,34 @@ def schedule_daily_tasks():
             now = datetime.now()
 
             if event_type == "morning":
-                nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
-                nudge = random.choice(nudges)
-                yesterday = (now - timedelta(days=1)).date()
-                answer = fetch_wordle_answer(yesterday)
-                if answer:
-                    nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
-                app.client.chat_postMessage(
-                    channel=channel_id,
-                    text=nudge,
-                )
+                if _alt_active:
+                    parts = []
+                    conditions = _fetch_marine_conditions()
+                    if conditions:
+                        parts.append(conditions)
+                    briefings = SUPPLEMENTAL.get("morning_briefing", [])
+                    if briefings:
+                        parts.append(random.choice(briefings))
+                    yesterday = (now - timedelta(days=1)).date()
+                    answer = fetch_wordle_answer(yesterday)
+                    if answer:
+                        parts.append(f"Oh. Yesterday's answer was *{answer.upper()}*.")
+                    if parts:
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text="\n\n".join(parts),
+                        )
+                else:
+                    nudges = COMMENTARY.get("morning_nudges", ["time to wordle."])
+                    nudge = random.choice(nudges)
+                    yesterday = (now - timedelta(days=1)).date()
+                    answer = fetch_wordle_answer(yesterday)
+                    if answer:
+                        nudge = f"yesterday's answer was *{answer.upper()}*. {nudge}"
+                    app.client.chat_postMessage(
+                        channel=channel_id,
+                        text=nudge,
+                    )
 
             elif event_type == "evening":
                 # Skip daily summary + shame if already posted via all-played trigger
@@ -1063,6 +1205,20 @@ def schedule_daily_tasks():
                     summary = build_daily_summary(scores)
                     if summary:
                         app.client.chat_postMessage(channel=channel_id, text=summary)
+
+                    if _alt_active:
+                        parts = []
+                        conditions = _fetch_marine_conditions()
+                        if conditions:
+                            parts.append(conditions)
+                        briefings = SUPPLEMENTAL.get("evening_briefing", [])
+                        if briefings:
+                            parts.append(random.choice(briefings))
+                        if parts:
+                            app.client.chat_postMessage(
+                                channel=channel_id,
+                                text="\n\n".join(parts),
+                            )
 
                     # Shame list
                     shame, has_missing = build_shame_list(scores)
@@ -1077,10 +1233,18 @@ def schedule_daily_tasks():
                 # Weekly champion on Sunday night
                 if now.weekday() == 6:
                     lb = build_leaderboard(scores, days=7)
-                    app.client.chat_postMessage(
-                        channel=channel_id,
-                        text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
-                    )
+                    if _alt_active:
+                        intros = SUPPLEMENTAL.get("weekly_intro", [])
+                        header = random.choice(intros) if intros else "Weekly results"
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text=f"{header}\n\n{lb}",
+                        )
+                    else:
+                        app.client.chat_postMessage(
+                            channel=channel_id,
+                            text=f"📣 *Weekly Wordle Champion*\n\n{lb}",
+                        )
 
                 # Monthly recap on the last day of the month
                 _, last_day = calendar.monthrange(now.year, now.month)
@@ -1135,13 +1299,17 @@ def handle_wordle_score(message, say, context):
             "X": "skull",
         }.get(score, "eyes")
 
+        override = SUPPLEMENTAL.get("reaction_override", "")
+        if _alt_active and override:
+            reaction = override
+
         app.client.reactions_add(
             channel=message["channel"],
             timestamp=message["ts"],
             name=reaction,
         )
 
-        if hard_mode:
+        if hard_mode and not (_alt_active and override):
             app.client.reactions_add(
                 channel=message["channel"],
                 timestamp=message["ts"],
@@ -1293,8 +1461,39 @@ def handle_wordle_command(ack, respond, say, command):
         respond(text="Unknown command. Try `/wordle help`")
 
 
+@app.event("reaction_added")
+def _handle_reaction_event(event, say):
+    global _alt_active
+    if _self_id is None:
+        return
+    if event.get("item_user") != _self_id:
+        return
+    trigger = SUPPLEMENTAL.get("trigger_reaction", "")
+    if not trigger or event.get("reaction") != trigger:
+        return
+
+    _alt_active = not _alt_active
+    channel = event.get("item", {}).get("channel")
+    if not channel:
+        return
+
+    emoji = SUPPLEMENTAL.get("reaction_override", trigger)
+    if _alt_active:
+        label = _apply_diacritics(SUPPLEMENTAL.get("mode_on", ""))
+        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
+    else:
+        label = _apply_diacritics(SUPPLEMENTAL.get("mode_off", ""))
+        app.client.chat_postMessage(channel=channel, text=f":{emoji}: {label} :{emoji}:")
+
+
 if __name__ == "__main__":
     logging.info("Starting Wordle bot...")
+
+    try:
+        _self_id = app.client.auth_test()["user_id"]
+        logging.info(f"Bot user ID: {_self_id}")
+    except Exception as e:
+        logging.warning(f"Could not retrieve bot user ID: {e}")
 
     summary_thread = threading.Thread(target=schedule_daily_tasks, daemon=True)
     summary_thread.start()

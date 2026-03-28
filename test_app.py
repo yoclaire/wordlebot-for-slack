@@ -83,6 +83,9 @@ rank_icon = _test_globals["rank_icon"]
 get_smart_commentary = _test_globals["get_smart_commentary"]
 check_streak = _test_globals["check_streak"]
 COMMENTARY = _test_globals["COMMENTARY"]
+SUPPLEMENTAL = _test_globals.get("SUPPLEMENTAL", {})
+_apply_diacritics = _test_globals.get("_apply_diacritics")
+_format_conditions = _test_globals.get("_format_conditions")
 
 
 # --- Test data ---
@@ -700,6 +703,160 @@ class TestRankIcon(unittest.TestCase):
 
     def test_beyond_ten(self):
         self.assertEqual(rank_icon(15), "16.")
+
+
+class TestSupplementalLoader(unittest.TestCase):
+    def test_supplemental_loads(self):
+        self.assertIsInstance(SUPPLEMENTAL, dict)
+
+    def test_has_score_keys(self):
+        for key in ["score_1", "score_2", "score_3", "score_4", "score_5", "score_6", "score_x"]:
+            self.assertIn(key, SUPPLEMENTAL, f"Missing key: {key}")
+            self.assertTrue(len(SUPPLEMENTAL[key]) >= 3, f"Too few templates for {key}")
+
+    def test_has_morning_evening(self):
+        self.assertIn("morning_briefing", SUPPLEMENTAL)
+        self.assertIn("evening_briefing", SUPPLEMENTAL)
+
+    def test_has_shame_and_all_played(self):
+        self.assertIn("shame", SUPPLEMENTAL)
+        self.assertIn("all_played", SUPPLEMENTAL)
+        for tmpl in SUPPLEMENTAL["shame"]:
+            self.assertIn("{names}", tmpl)
+
+
+class TestApplyDiacritics(unittest.TestCase):
+    def test_adds_combining_chars(self):
+        result = _apply_diacritics("TEST")
+        self.assertGreater(len(result), 4)
+
+    def test_preserves_base_text(self):
+        import unicodedata
+        result = _apply_diacritics("HELLO")
+        base = "".join(c for c in result if unicodedata.category(c) != "Mn")
+        self.assertEqual(base, "HELLO")
+
+    def test_empty_string(self):
+        self.assertEqual(_apply_diacritics(""), "")
+
+    def test_non_alpha_unchanged(self):
+        result = _apply_diacritics("123")
+        self.assertEqual(result, "123")
+
+
+class TestFormatConditions(unittest.TestCase):
+    def test_formats_full_data(self):
+        data = {
+            "current": {
+                "wave_height": 1.5,
+                "swell_wave_height": 1.2,
+                "swell_wave_period": 9.5,
+                "swell_wave_direction": 280,
+            }
+        }
+        result = _format_conditions(data, "Mavericks")
+        self.assertIn("Mavericks", result)
+        self.assertIn("1.2m", result)
+        self.assertIn("9.5s", result)
+
+    def test_wave_height_only(self):
+        data = {"current": {"wave_height": 2.0}}
+        result = _format_conditions(data, "Ocean Beach")
+        self.assertIn("Ocean Beach", result)
+        self.assertIn("2.0m", result)
+
+    def test_missing_current(self):
+        result = _format_conditions({}, "Bolinas")
+        self.assertIn("No data", result)
+
+    def test_direction_conversion(self):
+        # 270 degrees = W
+        data = {
+            "current": {
+                "wave_height": 1.0,
+                "swell_wave_height": 0.8,
+                "swell_wave_period": 8.0,
+                "swell_wave_direction": 270,
+            }
+        }
+        result = _format_conditions(data, "Fort Point")
+        self.assertIn("W", result)
+
+
+class TestAltModeCommentary(unittest.TestCase):
+    def setUp(self):
+        self._original = _test_globals.get("_alt_active", False)
+        _test_globals["_alt_active"] = True
+
+    def tearDown(self):
+        _test_globals["_alt_active"] = self._original
+
+    def test_alt_score_commentary(self):
+        for score in ["1", "2", "3", "4", "5", "6", "X"]:
+            c = get_commentary(score)
+            self.assertIsNotNone(c, f"No alt commentary for score {score}")
+            key = f"score_{score}" if score != "X" else "score_x"
+            self.assertIn(c, SUPPLEMENTAL[key])
+
+    def test_alt_smart_commentary_base(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", False)
+        self.assertTrue(len(replies) >= 1)
+        self.assertIn(replies[0], SUPPLEMENTAL["score_3"])
+
+    def test_alt_hard_mode(self):
+        scores = {"100": {"U1": {"score": "3", "hard_mode": True, "timestamp": "2025-01-01T12:00:00"}}}
+        replies = get_smart_commentary(scores, "U1", "100", "3", True)
+        self.assertTrue(len(replies) >= 2)
+        hard_found = any(r in SUPPLEMENTAL.get("hard_mode_good", []) for r in replies)
+        self.assertTrue(hard_found)
+
+    def test_alt_shame(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            },
+            "101": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
+            },
+        }
+        shame, has_missing = build_shame_list(scores)
+        self.assertTrue(has_missing)
+        has_crab_emoji = "\U0001f980" in shame or "\U0001f30a" in shame
+        self.assertTrue(has_crab_emoji, f"Shame message missing crab/wave emoji: {shame}")
+
+
+class TestAltModeDailySummary(unittest.TestCase):
+    def setUp(self):
+        self._original = _test_globals.get("_alt_active", False)
+        _test_globals["_alt_active"] = True
+
+    def tearDown(self):
+        _test_globals["_alt_active"] = self._original
+
+    def test_alt_daily_summary_header(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        self.assertIsNotNone(summary)
+        self.assertNotIn("Wordle 100 Results", summary)
+
+    def test_alt_daily_summary_difficulty(self):
+        scores = {
+            "100": {
+                "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "6", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        summary = build_daily_summary(scores)
+        normal_texts = ["easy one today", "solid challenge", "tough one today", "brutal. absolute brutality."]
+        has_normal = any(t in summary for t in normal_texts)
+        self.assertFalse(has_normal, "Should use alt difficulty text in alt mode")
 
 
 if __name__ == "__main__":
