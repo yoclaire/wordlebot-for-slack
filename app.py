@@ -9,6 +9,7 @@ import os
 import re
 import json
 import random
+import signal
 import logging
 import calendar
 import threading
@@ -1529,4 +1530,16 @@ if __name__ == "__main__":
     summary_thread.start()
 
     handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+
+    # Graceful shutdown on SIGTERM (docker stop) / SIGINT (Ctrl+C). Without this,
+    # handler.start() blocks forever and the container takes the full SIGKILL
+    # grace period to exit.
+    def _shutdown(signum, _frame):
+        logging.info("Received signal %s, shutting down", signum)
+        handler.close()
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT, _shutdown)
+
     handler.start()
+    logging.info("Bot stopped")
