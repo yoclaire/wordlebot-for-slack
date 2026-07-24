@@ -96,6 +96,7 @@ def _format_conditions(data: dict, spot_name: str) -> str:
     swell_h = current.get("swell_wave_height")
     swell_p = current.get("swell_wave_period")
     swell_d = current.get("swell_wave_direction")
+    sea_temp = current.get("sea_surface_temperature")
 
     if wave_h is None:
         return f"*{spot_name}*: No data available."
@@ -105,11 +106,17 @@ def _format_conditions(data: dict, spot_name: str) -> str:
     compass = dirs[round(swell_d / 22.5) % 16] if swell_d is not None else ""
 
     if swell_h is not None and swell_p is not None:
-        return (
+        report = (
             f"*{spot_name}*: {swell_h}m swell at {swell_p}s from the {compass}. "
             f"Combined wave height {wave_h}m."
         )
-    return f"*{spot_name}*: {wave_h}m wave height."
+    else:
+        report = f"*{spot_name}*: {wave_h}m wave height."
+
+    temp_templates = SUPPLEMENTAL.get("sea_temperature", [])
+    if sea_temp is not None and temp_templates:
+        report += "\n\n" + random.choice(temp_templates).format(temp=round(sea_temp, 1))
+    return report
 
 
 def _fetch_marine_conditions() -> str | None:
@@ -119,7 +126,7 @@ def _fetch_marine_conditions() -> str | None:
     url = (
         f"https://marine-api.open-meteo.com/v1/marine?"
         f"latitude={lat}&longitude={lon}"
-        f"&current=wave_height,swell_wave_height,swell_wave_period,swell_wave_direction"
+        f"&current=wave_height,swell_wave_height,swell_wave_period,swell_wave_direction,sea_surface_temperature"
     )
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "wordlebot"})
@@ -129,6 +136,17 @@ def _fetch_marine_conditions() -> str | None:
     except Exception as e:
         logging.warning(f"Could not fetch marine conditions: {e}")
         return None
+
+
+def _moon_phase(dt: datetime) -> str:
+    """Current moon-phase key (offline, no API)."""
+    known_new = datetime(2000, 1, 6, 18, 14)  # a known new moon, UTC
+    synodic = 29.530588853
+    days = (dt - known_new).total_seconds() / 86400.0
+    pos = (days % synodic) / synodic  # 0..1 through the cycle
+    idx = int(pos * 8 + 0.5) % 8
+    return ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
+            "full", "waning_gibbous", "last_quarter", "waning_crescent"][idx]
 
 
 def lookup_user_by_name(client, name: str) -> str | None:

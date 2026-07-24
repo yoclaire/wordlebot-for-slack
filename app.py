@@ -179,6 +179,9 @@ def schedule_daily_tasks():
                     briefings = SUPPLEMENTAL.get("morning_briefing", [])
                     if briefings:
                         parts.append(random.choice(briefings))
+                    moon = SUPPLEMENTAL.get("moon_phase", {}).get(logic._moon_phase(now), [])
+                    if moon:
+                        parts.append(random.choice(moon))
                     yesterday = (now - timedelta(days=1)).date()
                     answer = fetch_wordle_answer(yesterday)
                     if answer:
@@ -219,6 +222,9 @@ def schedule_daily_tasks():
                         briefings = SUPPLEMENTAL.get("evening_briefing", [])
                         if briefings:
                             parts.append(random.choice(briefings))
+                        moon = SUPPLEMENTAL.get("moon_phase", {}).get(logic._moon_phase(now), [])
+                        if moon:
+                            parts.append(random.choice(moon))
                         if parts:
                             app.client.chat_postMessage(
                                 channel=channel_id,

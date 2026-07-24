@@ -675,6 +675,19 @@ class TestSupplementalLoader(unittest.TestCase):
         for tmpl in SUPPLEMENTAL["shame"]:
             self.assertIn("{names}", tmpl)
 
+    def test_has_all_moon_phases(self):
+        self.assertIn("moon_phase", SUPPLEMENTAL)
+        for phase in ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
+                      "full", "waning_gibbous", "last_quarter", "waning_crescent"]:
+            self.assertIn(phase, SUPPLEMENTAL["moon_phase"], f"Missing phase: {phase}")
+            self.assertTrue(len(SUPPLEMENTAL["moon_phase"][phase]) >= 1, f"No templates for {phase}")
+
+    def test_sea_temperature_templates_have_placeholder(self):
+        self.assertIn("sea_temperature", SUPPLEMENTAL)
+        self.assertTrue(len(SUPPLEMENTAL["sea_temperature"]) >= 1)
+        for tmpl in SUPPLEMENTAL["sea_temperature"]:
+            self.assertIn("{temp}", tmpl)
+
 
 class TestApplyDiacritics(unittest.TestCase):
     def test_adds_combining_chars(self):
@@ -732,6 +745,55 @@ class TestFormatConditions(unittest.TestCase):
         }
         result = _format_conditions(data, "Fort Point")
         self.assertIn("W", result)
+
+    def test_includes_sea_temperature_line(self):
+        data = {
+            "current": {
+                "wave_height": 1.5,
+                "swell_wave_height": 1.2,
+                "swell_wave_period": 9.5,
+                "swell_wave_direction": 280,
+                "sea_surface_temperature": 14.43,
+            }
+        }
+        result = _format_conditions(data, "Mavericks")
+        self.assertIn("14.4°C", result)
+
+    def test_no_temp_line_when_temp_missing(self):
+        data = {"current": {"wave_height": 2.0}}
+        result = _format_conditions(data, "Ocean Beach")
+        self.assertNotIn("°C", result)
+
+
+class TestMoonPhase(unittest.TestCase):
+    KNOWN_NEW_MOON = datetime(2000, 1, 6, 18, 14)
+    SYNODIC = 29.530588853
+    PHASES = ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
+              "full", "waning_gibbous", "last_quarter", "waning_crescent"]
+
+    def test_known_new_moon(self):
+        self.assertEqual(logic._moon_phase(self.KNOWN_NEW_MOON), "new")
+
+    def test_first_quarter_at_quarter_cycle(self):
+        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC / 4)
+        self.assertEqual(logic._moon_phase(dt), "first_quarter")
+
+    def test_full_at_half_cycle(self):
+        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC / 2)
+        self.assertEqual(logic._moon_phase(dt), "full")
+
+    def test_last_quarter_at_three_quarter_cycle(self):
+        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC * 3 / 4)
+        self.assertEqual(logic._moon_phase(dt), "last_quarter")
+
+    def test_wraps_after_many_cycles(self):
+        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC * 100)
+        self.assertEqual(logic._moon_phase(dt), "new")
+
+    def test_always_returns_valid_phase_key(self):
+        for offset in range(31):
+            phase = logic._moon_phase(datetime(2026, 7, 1) + timedelta(days=offset))
+            self.assertIn(phase, self.PHASES)
 
 
 class TestAltModeCommentary(unittest.TestCase):
