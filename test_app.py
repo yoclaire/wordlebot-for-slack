@@ -5,6 +5,7 @@ import threading
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest import mock
 
 import logic
 from logic import (
@@ -288,16 +289,30 @@ class TestTiedRankings(unittest.TestCase):
 
 
 class TestFetchWordleAnswer(unittest.TestCase):
-    def test_fetches_known_date(self):
-        from datetime import date
-        answer = fetch_wordle_answer(date(2026, 3, 12))
-        self.assertIsNotNone(answer)
-        self.assertEqual(answer, "smell")
+    @staticmethod
+    def _fake_urlopen(payload):
+        class _Resp:
+            def read(self):
+                return payload
 
-    def test_returns_none_on_invalid_date(self):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        return lambda req, timeout=None: _Resp()
+
+    def test_parses_solution(self):
         from datetime import date
-        answer = fetch_wordle_answer(date(1999, 1, 1))
-        self.assertIsNone(answer)
+        fake = self._fake_urlopen(b'{"solution": "smell"}')
+        with mock.patch("logic.urllib.request.urlopen", fake):
+            self.assertEqual(fetch_wordle_answer(date(2026, 3, 12)), "smell")
+
+    def test_returns_none_on_error(self):
+        from datetime import date
+        with mock.patch("logic.urllib.request.urlopen", side_effect=OSError("no network")):
+            self.assertIsNone(fetch_wordle_answer(date(1999, 1, 1)))
 
 
 class TestGetActivePlayers(unittest.TestCase):
@@ -918,12 +933,15 @@ class TempDataDirTestCase(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self._old_dir = logic.DATA_DIR
         self._old_scores = logic.SCORES_FILE
+        self._old_config = logic.CONFIG_FILE
         logic.DATA_DIR = Path(self._tmp.name)
         logic.SCORES_FILE = logic.DATA_DIR / "scores.json"
+        logic.CONFIG_FILE = logic.DATA_DIR / "config.json"
 
     def tearDown(self):
         logic.DATA_DIR = self._old_dir
         logic.SCORES_FILE = self._old_scores
+        logic.CONFIG_FILE = self._old_config
         self._tmp.cleanup()
 
 
@@ -970,6 +988,34 @@ class TestRecordScoresBulk(TempDataDirTestCase):
         self.assertEqual(scores["1500"]["U2"]["score"], "2")
         self.assertTrue(scores["1500"]["U2"]["hard_mode"])
         self.assertEqual(scores["1501"]["U3"]["score"], "X")
+
+
+class TestUpdateConfigConcurrency(TempDataDirTestCase):
+    def test_simultaneous_config_writes_all_survive(self):
+        # Without the lock this loses updates the same way scores.json did:
+        # eight threads each read-modify-write config, most vanish.
+        barrier = threading.Barrier(8)
+
+        def grant(uid):
+            barrier.wait()
+
+            def _mutate(config):
+                config.setdefault("achievements", {})[uid] = ["first_solve"]
+                return True
+
+            logic.update_config(_mutate)
+
+        threads = [threading.Thread(target=grant, args=(f"U{i}",)) for i in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(len(logic.load_config()["achievements"]), 8)
+
+    def test_falsy_mutate_skips_write(self):
+        self.assertFalse(logic.CONFIG_FILE.exists())
+        self.assertFalse(logic.update_config(lambda config: False))
+        self.assertFalse(logic.CONFIG_FILE.exists())
 
 
 class FakePagingClient:

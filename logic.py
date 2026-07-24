@@ -36,6 +36,10 @@ _alt_active = False
 _alt_activated_at = None
 _alt_channel = None
 
+# Guards the alt-mode globals above. RLock (not Lock) so activate_alt_mode()
+# can call alt_mode_active() while already holding it.
+_alt_lock = threading.RLock()
+
 MILESTONES = [10, 25, 50, 100, 200, 365, 500, 1000]
 
 ACHIEVEMENTS = {
@@ -202,6 +206,28 @@ def save_config(config: dict):
     os.replace(tmp, CONFIG_FILE)
 
 
+# Serializes read-modify-write of config.json — same Bolt thread-pool hazard as
+# scores.json. Achievements, the channel id, and milestone flags all RMW config,
+# so an unguarded read-mutate-write could silently drop a concurrent update.
+_config_lock = threading.Lock()
+
+
+def update_config(mutate):
+    """Atomically read-modify-write config.json under a lock.
+
+    ``mutate(config)`` mutates the loaded config in place and returns a value.
+    A falsy return means "nothing changed" and skips the write; a truthy return
+    triggers the save. The return value is handed back to the caller, so a
+    mutator can both report whether it changed anything and pass data out.
+    """
+    with _config_lock:
+        config = load_config()
+        changed = mutate(config)
+        if changed:
+            save_config(config)
+        return changed
+
+
 # Serializes read-modify-write of scores.json — Bolt dispatches handlers on a
 # thread pool, so two pastes can land at once.
 _data_lock = threading.Lock()
@@ -340,9 +366,10 @@ def _apply_diacritics(text: str) -> str:
 
 def _deactivate_alt_mode():
     global _alt_active, _alt_activated_at, _alt_channel
-    _alt_active = False
-    _alt_activated_at = None
-    _alt_channel = None
+    with _alt_lock:
+        _alt_active = False
+        _alt_activated_at = None
+        _alt_channel = None
 
 
 ALT_MODE_DURATION = timedelta(hours=24)
@@ -350,23 +377,25 @@ ALT_MODE_DURATION = timedelta(hours=24)
 
 def alt_mode_active() -> bool:
     """True while alt mode is on and within its 24h window; expires lazily."""
-    if not _alt_active:
-        return False
-    if _alt_activated_at is not None and datetime.now() - _alt_activated_at > ALT_MODE_DURATION:
-        _deactivate_alt_mode()
-        return False
-    return True
+    with _alt_lock:
+        if not _alt_active:
+            return False
+        if _alt_activated_at is not None and datetime.now() - _alt_activated_at > ALT_MODE_DURATION:
+            _deactivate_alt_mode()
+            return False
+        return True
 
 
 def activate_alt_mode(channel: str | None) -> bool:
     """Turn alt mode on. Returns False if it was already active."""
     global _alt_active, _alt_activated_at, _alt_channel
-    if alt_mode_active():
-        return False
-    _alt_active = True
-    _alt_activated_at = datetime.now()
-    _alt_channel = channel
-    return True
+    with _alt_lock:
+        if alt_mode_active():
+            return False
+        _alt_active = True
+        _alt_activated_at = datetime.now()
+        _alt_channel = channel
+        return True
 
 
 def check_milestone(scores: dict, user_id: str) -> str | None:
@@ -425,13 +454,9 @@ def check_hot_cold(scores: dict, user_id: str) -> str | None:
 
 def check_achievements(scores: dict, user_id: str) -> list[str]:
     """Check for newly earned achievements."""
-    config = load_config()
-    earned = config.get("achievements", {}).get(user_id, [])
     stats = get_user_stats(scores, user_id)
     if not stats:
         return []
-
-    new_achievements = []
 
     checks = [
         ("first_solve", stats["games"] >= 1),
@@ -457,19 +482,18 @@ def check_achievements(scores: dict, user_id: str) -> list[str]:
             consecutive_wins = 0
     checks.append(("no_fails_20", max_consecutive_wins >= 20))
 
-    for key, condition in checks:
-        if condition and key not in earned:
-            earned.append(key)
-            emoji, desc = ACHIEVEMENTS[key]
-            new_achievements.append(f"{emoji} *Achievement unlocked:* {desc}!")
+    # Grant + persist atomically so a concurrent handler can't clobber the list.
+    def _grant(config):
+        earned = config.setdefault("achievements", {}).setdefault(user_id, [])
+        new = []
+        for key, condition in checks:
+            if condition and key not in earned:
+                earned.append(key)
+                emoji, desc = ACHIEVEMENTS[key]
+                new.append(f"{emoji} *Achievement unlocked:* {desc}!")
+        return new
 
-    if new_achievements:
-        if "achievements" not in config:
-            config["achievements"] = {}
-        config["achievements"][user_id] = earned
-        save_config(config)
-
-    return new_achievements
+    return update_config(_grant) or []
 
 
 def check_rivalry(scores: dict) -> str | None:

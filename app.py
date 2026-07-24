@@ -19,7 +19,6 @@ from datetime import datetime, timedelta
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-import logic
 from logic import (
     ACHIEVEMENTS,
     COMMENTARY,
@@ -28,6 +27,9 @@ from logic import (
     WORDLE_RE,
     _apply_diacritics,
     _fetch_marine_conditions,
+    _moon_phase,
+    activate_alt_mode,
+    alt_mode_active,
     build_daily_summary,
     build_hardest_puzzles,
     build_leaderboard,
@@ -50,7 +52,7 @@ from logic import (
     lookup_user_by_name,
     record_score,
     record_scores_bulk,
-    save_config,
+    update_config,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -93,15 +95,18 @@ def post_all_played_summary(channel_id: str, scores: dict):
     """Post daily summary and leaderboard when all active players have played."""
     latest = max(scores.keys(), key=lambda x: int(x.replace(",", "")))
 
-    # Check if we already posted for this puzzle
-    config = load_config()
-    if config.get("last_all_played_puzzle") == latest:
+    # Claim this puzzle atomically so two concurrent handlers can't both
+    # decide "all played" and double-post the summary.
+    def _claim(config):
+        if config.get("last_all_played_puzzle") == latest:
+            return False
+        config["last_all_played_puzzle"] = latest
+        return True
+
+    if not update_config(_claim):
         return
 
-    config["last_all_played_puzzle"] = latest
-    save_config(config)
-
-    source = SUPPLEMENTAL if logic.alt_mode_active() and "all_played" in SUPPLEMENTAL else COMMENTARY
+    source = SUPPLEMENTAL if alt_mode_active() and "all_played" in SUPPLEMENTAL else COMMENTARY
     templates = source.get("all_played", ["Everyone's in! Let's see how you all did."])
     app.client.chat_postMessage(
         channel=channel_id,
@@ -123,13 +128,13 @@ def post_all_played_summary(channel_id: str, scores: dict):
     # Group streak
     group_streak = get_group_streak(scores)
     if group_streak >= 3 and group_streak % 5 == 0:
-        if logic.alt_mode_active() and "group_streak_major" in SUPPLEMENTAL:
+        if alt_mode_active() and "group_streak_major" in SUPPLEMENTAL:
             text = random.choice(SUPPLEMENTAL["group_streak_major"]).format(streak=group_streak)
         else:
             text = f"🤝 *{group_streak}-day group streak!* Everyone's been showing up. Don't be the one to break it."
         app.client.chat_postMessage(channel=channel_id, text=text)
     elif group_streak >= 3:
-        if logic.alt_mode_active() and "group_streak" in SUPPLEMENTAL:
+        if alt_mode_active() and "group_streak" in SUPPLEMENTAL:
             text = random.choice(SUPPLEMENTAL["group_streak"]).format(streak=group_streak)
         else:
             text = f"🤝 group streak: *{group_streak} days* and counting."
@@ -171,7 +176,7 @@ def schedule_daily_tasks():
             now = datetime.now()
 
             if event_type == "morning":
-                if logic.alt_mode_active():
+                if alt_mode_active():
                     parts = []
                     conditions = _fetch_marine_conditions()
                     if conditions:
@@ -179,7 +184,7 @@ def schedule_daily_tasks():
                     briefings = SUPPLEMENTAL.get("morning_briefing", [])
                     if briefings:
                         parts.append(random.choice(briefings))
-                    moon = SUPPLEMENTAL.get("moon_phase", {}).get(logic._moon_phase(now), [])
+                    moon = SUPPLEMENTAL.get("moon_phase", {}).get(_moon_phase(now), [])
                     if moon:
                         parts.append(random.choice(moon))
                     yesterday = (now - timedelta(days=1)).date()
@@ -214,7 +219,7 @@ def schedule_daily_tasks():
                     if summary:
                         app.client.chat_postMessage(channel=channel_id, text=summary)
 
-                    if logic.alt_mode_active():
+                    if alt_mode_active():
                         parts = []
                         conditions = _fetch_marine_conditions()
                         if conditions:
@@ -222,7 +227,7 @@ def schedule_daily_tasks():
                         briefings = SUPPLEMENTAL.get("evening_briefing", [])
                         if briefings:
                             parts.append(random.choice(briefings))
-                        moon = SUPPLEMENTAL.get("moon_phase", {}).get(logic._moon_phase(now), [])
+                        moon = SUPPLEMENTAL.get("moon_phase", {}).get(_moon_phase(now), [])
                         if moon:
                             parts.append(random.choice(moon))
                         if parts:
@@ -244,7 +249,7 @@ def schedule_daily_tasks():
                 # Weekly champion on Sunday night
                 if now.weekday() == 6:
                     lb = build_leaderboard(scores, days=7)
-                    if logic.alt_mode_active():
+                    if alt_mode_active():
                         intros = SUPPLEMENTAL.get("weekly_intro", [])
                         header = random.choice(intros) if intros else "Weekly results"
                         app.client.chat_postMessage(
@@ -293,10 +298,13 @@ def handle_wordle_score(message, say, context):
         return
 
     # Save channel for scheduled posts
-    config = load_config()
-    if not config.get("wordle_channel"):
+    def _set_channel(config):
+        if config.get("wordle_channel"):
+            return False
         config["wordle_channel"] = message["channel"]
-        save_config(config)
+        return True
+
+    update_config(_set_channel)
 
     # React
     try:
@@ -311,7 +319,7 @@ def handle_wordle_score(message, say, context):
         }.get(score, "eyes")
 
         override = SUPPLEMENTAL.get("reaction_override", "")
-        if logic.alt_mode_active() and override:
+        if alt_mode_active() and override:
             reaction = override
 
         app.client.reactions_add(
@@ -320,7 +328,7 @@ def handle_wordle_score(message, say, context):
             name=reaction,
         )
 
-        if hard_mode and not (logic.alt_mode_active() and override):
+        if hard_mode and not (alt_mode_active() and override):
             app.client.reactions_add(
                 channel=message["channel"],
                 timestamp=message["ts"],
@@ -346,10 +354,13 @@ def handle_wordle_score(message, say, context):
     # Puzzle number milestones (post to channel, not thread)
     puzzle_milestone = check_puzzle_milestone(puzzle_num)
     if puzzle_milestone:
-        config = load_config()
-        if config.get("last_puzzle_milestone") != puzzle_num:
+        def _claim_milestone(config):
+            if config.get("last_puzzle_milestone") == puzzle_num:
+                return False
             config["last_puzzle_milestone"] = puzzle_num
-            save_config(config)
+            return True
+
+        if update_config(_claim_milestone):
             say(text=puzzle_milestone)
 
     # Check if all active players have now played — post summary immediately
@@ -482,7 +493,7 @@ def _handle_reaction_event(event, say):
     if not trigger or event.get("reaction") != trigger:
         return
     channel = event.get("item", {}).get("channel")
-    if not logic.activate_alt_mode(channel):
+    if not activate_alt_mode(channel):
         return
     if not channel:
         return
