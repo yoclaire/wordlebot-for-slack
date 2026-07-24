@@ -1,0 +1,4 @@
+# Pin the pre-0.16 default rule set: ruff 0.16 expanded its defaults, and CI
+# installs latest ruff, so unpinned rules shift lint results between pushes.
+[lint]
+select = ["E4", "E7", "E9", "F"]
