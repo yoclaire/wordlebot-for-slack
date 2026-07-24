@@ -26,8 +26,8 @@ from logic import (
     SUPPLEMENTAL,
     WORDLE_RE,
     _apply_diacritics,
-    _fetch_marine_conditions,
-    _moon_phase,
+    _cycle_phase,
+    _fetch_ambient,
     activate_alt_mode,
     alt_mode_active,
     build_daily_summary,
@@ -178,15 +178,15 @@ def schedule_daily_tasks():
             if event_type == "morning":
                 if alt_mode_active():
                     parts = []
-                    conditions = _fetch_marine_conditions()
+                    conditions = _fetch_ambient()
                     if conditions:
                         parts.append(conditions)
                     briefings = SUPPLEMENTAL.get("morning_briefing", [])
                     if briefings:
                         parts.append(random.choice(briefings))
-                    moon = SUPPLEMENTAL.get("moon_phase", {}).get(_moon_phase(now), [])
-                    if moon:
-                        parts.append(random.choice(moon))
+                    phase_lines = SUPPLEMENTAL.get("cycle", {}).get(_cycle_phase(now), [])
+                    if phase_lines:
+                        parts.append(random.choice(phase_lines))
                     yesterday = (now - timedelta(days=1)).date()
                     answer = fetch_wordle_answer(yesterday)
                     if answer:
@@ -221,15 +221,15 @@ def schedule_daily_tasks():
 
                     if alt_mode_active():
                         parts = []
-                        conditions = _fetch_marine_conditions()
+                        conditions = _fetch_ambient()
                         if conditions:
                             parts.append(conditions)
                         briefings = SUPPLEMENTAL.get("evening_briefing", [])
                         if briefings:
                             parts.append(random.choice(briefings))
-                        moon = SUPPLEMENTAL.get("moon_phase", {}).get(_moon_phase(now), [])
-                        if moon:
-                            parts.append(random.choice(moon))
+                        phase_lines = SUPPLEMENTAL.get("cycle", {}).get(_cycle_phase(now), [])
+                        if phase_lines:
+                            parts.append(random.choice(phase_lines))
                         if parts:
                             app.client.chat_postMessage(
                                 channel=channel_id,

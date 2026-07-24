@@ -90,20 +90,20 @@ def fetch_wordle_answer(puzzle_date: date) -> str | None:
         return None
 
 
-_SURF_SPOTS = {k: tuple(v) for k, v in SUPPLEMENTAL.get("surf_spots", {}).items()}
+_LOCATIONS = {k: tuple(v) for k, v in SUPPLEMENTAL.get("locations", {}).items()}
 
 
-def _format_conditions(data: dict, spot_name: str) -> str:
-    """Format marine API response into a conditions report."""
+def _format_ambient(data: dict, loc_name: str) -> str:
+    """Format the ambient API response into a short report."""
     current = data.get("current", {})
     wave_h = current.get("wave_height")
     swell_h = current.get("swell_wave_height")
     swell_p = current.get("swell_wave_period")
     swell_d = current.get("swell_wave_direction")
-    sea_temp = current.get("sea_surface_temperature")
+    temp = current.get("sea_surface_temperature")
 
     if wave_h is None:
-        return f"*{spot_name}*: No data available."
+        return f"*{loc_name}*: No data available."
 
     dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
             "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
@@ -111,22 +111,22 @@ def _format_conditions(data: dict, spot_name: str) -> str:
 
     if swell_h is not None and swell_p is not None:
         report = (
-            f"*{spot_name}*: {swell_h}m swell at {swell_p}s from the {compass}. "
+            f"*{loc_name}*: {swell_h}m swell at {swell_p}s from the {compass}. "
             f"Combined wave height {wave_h}m."
         )
     else:
-        report = f"*{spot_name}*: {wave_h}m wave height."
+        report = f"*{loc_name}*: {wave_h}m wave height."
 
-    temp_templates = SUPPLEMENTAL.get("sea_temperature", [])
-    if sea_temp is not None and temp_templates:
-        report += "\n\n" + random.choice(temp_templates).format(temp=round(sea_temp, 1))
+    temp_templates = SUPPLEMENTAL.get("temperature", [])
+    if temp is not None and temp_templates:
+        report += "\n\n" + random.choice(temp_templates).format(temp=round(temp, 1))
     return report
 
 
-def _fetch_marine_conditions() -> str | None:
-    """Fetch current marine conditions for a random surf spot."""
-    spot_name = random.choice(list(_SURF_SPOTS.keys()))
-    lat, lon = _SURF_SPOTS[spot_name]
+def _fetch_ambient() -> str | None:
+    """Fetch ambient conditions for a random configured location."""
+    loc_name = random.choice(list(_LOCATIONS.keys()))
+    lat, lon = _LOCATIONS[loc_name]
     url = (
         f"https://marine-api.open-meteo.com/v1/marine?"
         f"latitude={lat}&longitude={lon}"
@@ -136,18 +136,18 @@ def _fetch_marine_conditions() -> str | None:
         req = urllib.request.Request(url, headers={"User-Agent": "wordlebot"})
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read())
-        return _format_conditions(data, spot_name)
+        return _format_ambient(data, loc_name)
     except Exception as e:
-        logging.warning(f"Could not fetch marine conditions: {e}")
+        logging.warning(f"Could not fetch ambient conditions: {e}")
         return None
 
 
-def _moon_phase(dt: datetime) -> str:
-    """Current moon-phase key (offline, no API)."""
-    known_new = datetime(2000, 1, 6, 18, 14)  # a known new moon, UTC
-    synodic = 29.530588853
-    days = (dt - known_new).total_seconds() / 86400.0
-    pos = (days % synodic) / synodic  # 0..1 through the cycle
+def _cycle_phase(dt: datetime) -> str:
+    """Current cycle-phase key (offline, no API)."""
+    ref_epoch = datetime(2000, 1, 6, 18, 14)  # cycle reference epoch, UTC
+    cycle_days = 29.530588853
+    days = (dt - ref_epoch).total_seconds() / 86400.0
+    pos = (days % cycle_days) / cycle_days  # 0..1 through the cycle
     idx = int(pos * 8 + 0.5) % 8
     return ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
             "full", "waning_gibbous", "last_quarter", "waning_crescent"][idx]

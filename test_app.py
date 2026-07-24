@@ -14,7 +14,7 @@ from logic import (
     SUPPLEMENTAL,
     WORDLE_RE,
     _apply_diacritics,
-    _format_conditions,
+    _format_ambient,
     build_daily_summary,
     build_leaderboard,
     build_shame_list,
@@ -690,17 +690,17 @@ class TestSupplementalLoader(unittest.TestCase):
         for tmpl in SUPPLEMENTAL["shame"]:
             self.assertIn("{names}", tmpl)
 
-    def test_has_all_moon_phases(self):
-        self.assertIn("moon_phase", SUPPLEMENTAL)
+    def test_has_all_cycle_phases(self):
+        self.assertIn("cycle", SUPPLEMENTAL)
         for phase in ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
                       "full", "waning_gibbous", "last_quarter", "waning_crescent"]:
-            self.assertIn(phase, SUPPLEMENTAL["moon_phase"], f"Missing phase: {phase}")
-            self.assertTrue(len(SUPPLEMENTAL["moon_phase"][phase]) >= 1, f"No templates for {phase}")
+            self.assertIn(phase, SUPPLEMENTAL["cycle"], f"Missing phase: {phase}")
+            self.assertTrue(len(SUPPLEMENTAL["cycle"][phase]) >= 1, f"No templates for {phase}")
 
-    def test_sea_temperature_templates_have_placeholder(self):
-        self.assertIn("sea_temperature", SUPPLEMENTAL)
-        self.assertTrue(len(SUPPLEMENTAL["sea_temperature"]) >= 1)
-        for tmpl in SUPPLEMENTAL["sea_temperature"]:
+    def test_temperature_templates_have_placeholder(self):
+        self.assertIn("temperature", SUPPLEMENTAL)
+        self.assertTrue(len(SUPPLEMENTAL["temperature"]) >= 1)
+        for tmpl in SUPPLEMENTAL["temperature"]:
             self.assertIn("{temp}", tmpl)
 
 
@@ -723,7 +723,7 @@ class TestApplyDiacritics(unittest.TestCase):
         self.assertEqual(result, "123")
 
 
-class TestFormatConditions(unittest.TestCase):
+class TestFormatAmbient(unittest.TestCase):
     def test_formats_full_data(self):
         data = {
             "current": {
@@ -733,19 +733,19 @@ class TestFormatConditions(unittest.TestCase):
                 "swell_wave_direction": 280,
             }
         }
-        result = _format_conditions(data, "Mavericks")
-        self.assertIn("Mavericks", result)
+        result = _format_ambient(data, "Loc-1")
+        self.assertIn("Loc-1", result)
         self.assertIn("1.2m", result)
         self.assertIn("9.5s", result)
 
     def test_wave_height_only(self):
         data = {"current": {"wave_height": 2.0}}
-        result = _format_conditions(data, "Ocean Beach")
-        self.assertIn("Ocean Beach", result)
+        result = _format_ambient(data, "Loc-2")
+        self.assertIn("Loc-2", result)
         self.assertIn("2.0m", result)
 
     def test_missing_current(self):
-        result = _format_conditions({}, "Bolinas")
+        result = _format_ambient({}, "Loc-3")
         self.assertIn("No data", result)
 
     def test_direction_conversion(self):
@@ -758,10 +758,10 @@ class TestFormatConditions(unittest.TestCase):
                 "swell_wave_direction": 270,
             }
         }
-        result = _format_conditions(data, "Fort Point")
+        result = _format_ambient(data, "Loc-4")
         self.assertIn("W", result)
 
-    def test_includes_sea_temperature_line(self):
+    def test_includes_temperature_line(self):
         data = {
             "current": {
                 "wave_height": 1.5,
@@ -771,43 +771,43 @@ class TestFormatConditions(unittest.TestCase):
                 "sea_surface_temperature": 14.43,
             }
         }
-        result = _format_conditions(data, "Mavericks")
+        result = _format_ambient(data, "Loc-1")
         self.assertIn("14.4°C", result)
 
     def test_no_temp_line_when_temp_missing(self):
         data = {"current": {"wave_height": 2.0}}
-        result = _format_conditions(data, "Ocean Beach")
+        result = _format_ambient(data, "Loc-2")
         self.assertNotIn("°C", result)
 
 
-class TestMoonPhase(unittest.TestCase):
-    KNOWN_NEW_MOON = datetime(2000, 1, 6, 18, 14)
-    SYNODIC = 29.530588853
+class TestCyclePhase(unittest.TestCase):
+    REF_EPOCH = datetime(2000, 1, 6, 18, 14)
+    CYCLE_DAYS = 29.530588853
     PHASES = ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
               "full", "waning_gibbous", "last_quarter", "waning_crescent"]
 
-    def test_known_new_moon(self):
-        self.assertEqual(logic._moon_phase(self.KNOWN_NEW_MOON), "new")
+    def test_known_reference(self):
+        self.assertEqual(logic._cycle_phase(self.REF_EPOCH), "new")
 
-    def test_first_quarter_at_quarter_cycle(self):
-        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC / 4)
-        self.assertEqual(logic._moon_phase(dt), "first_quarter")
+    def test_quarter_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS / 4)
+        self.assertEqual(logic._cycle_phase(dt), "first_quarter")
 
-    def test_full_at_half_cycle(self):
-        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC / 2)
-        self.assertEqual(logic._moon_phase(dt), "full")
+    def test_half_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS / 2)
+        self.assertEqual(logic._cycle_phase(dt), "full")
 
-    def test_last_quarter_at_three_quarter_cycle(self):
-        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC * 3 / 4)
-        self.assertEqual(logic._moon_phase(dt), "last_quarter")
+    def test_three_quarter_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS * 3 / 4)
+        self.assertEqual(logic._cycle_phase(dt), "last_quarter")
 
     def test_wraps_after_many_cycles(self):
-        dt = self.KNOWN_NEW_MOON + timedelta(days=self.SYNODIC * 100)
-        self.assertEqual(logic._moon_phase(dt), "new")
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS * 100)
+        self.assertEqual(logic._cycle_phase(dt), "new")
 
     def test_always_returns_valid_phase_key(self):
         for offset in range(31):
-            phase = logic._moon_phase(datetime(2026, 7, 1) + timedelta(days=offset))
+            phase = logic._cycle_phase(datetime(2026, 7, 1) + timedelta(days=offset))
             self.assertIn(phase, self.PHASES)
 
 

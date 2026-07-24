@@ -302,7 +302,7 @@
     "🦀 The *Cardisoma guanhumi* can migrate up to 8 km from the ocean and still return. Impressive navigation."
   ],
 
-  "moon_phase": {
+  "cycle": {
     "new": [
       "🌊 New moon. The tide swings to its spring maximum. *Uca* — the fiddler crabs — set their larval release to precisely this darkness. The colony keeps the schedule.",
       "🦀 New moon. No light on the water, and the strongest tides of the month. The intertidal is at its most ambitious tonight."
@@ -337,14 +337,14 @@
     ]
   },
 
-  "sea_temperature": [
+  "temperature": [
     "🦀 The water is {temp}°C. The crabs are comfortable. Whether you are is not the research team's concern.",
     "🌊 Sea surface holding at {temp}°C. Dungeness molt timing is sensitive to precisely this figure.",
     "🌊 Water temperature: {temp}°C. Within tolerance for the local *Cancer* species. Marginal, at best, for you.",
     "🌊 {temp}°C at the surface. Cold enough to keep the metabolism deliberate. The crabs prefer it this way."
   ],
 
-  "surf_spots": {
+  "locations": {
     "Mavericks": [37.4936, -122.4967],
     "Ocean Beach": [37.7609, -122.5108],
     "Steamer Lane": [36.9519, -122.0261],
