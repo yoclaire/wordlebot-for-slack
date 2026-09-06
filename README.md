@@ -1,5 +1,8 @@
 # wordlebot-for-slack
 
+For development sessions, start with [AGENTS.md](AGENTS.md); Claude imports the
+same instructions through [CLAUDE.md](CLAUDE.md).
+
 A Slack bot that tracks [Wordle](https://www.nytimes.com/games/wordle/) scores, posts leaderboards, and talks trash.
 
 Just paste your Wordle share into a channel and the bot handles the rest.
