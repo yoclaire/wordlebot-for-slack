@@ -11,7 +11,7 @@ before asserting a default or suggesting an operational command.
 |---|---|
 | Bot handlers, scoring, persistence and scheduling | [app.py](app.py) |
 | Logic tests | [test_app.py](test_app.py) |
-| Checks and dependencies | [CI](.github/workflows/ci.yml), [requirements](requirements.txt) |
+| Checks and dependencies | [CI](.github/workflows/ci.yml), [lint rules](ruff.toml), [requirements](requirements.txt) |
 | Container startup and volumes | [Dockerfile](Dockerfile), [Compose](docker-compose.yml) |
 | Environment names | [.env.example](.env.example); never copy live values into Git |
 
