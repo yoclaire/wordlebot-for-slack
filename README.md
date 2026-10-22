@@ -78,6 +78,14 @@ docker compose up -d
 
 Invite the bot to a channel and start pasting Wordle shares.
 
+The container base is digest-pinned. The October 2026 certificate update refreshes
+the OS CA package and hash-pins pip 26.2.2, whose bundled certifi is 2026.10.19;
+updating Python alone does not update pip's independent trust store. Rebuild and
+recreate existing containers after deploying this change. Managed installations
+should use their host's systemd deployment workflow for every instance. Verify
+the running trust-store versions and normal Socket Mode operation; the unit
+suite does not connect to Slack.
+
 ### 5. Backfill (optional)
 
 If the channel already has Wordle scores, run `/wordle backfill` to import them.
