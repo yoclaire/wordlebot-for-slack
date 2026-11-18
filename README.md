@@ -1,5 +1,8 @@
 # wordlebot-for-slack
 
+For development sessions, start with [AGENTS.md](AGENTS.md); Claude imports the
+same instructions through [CLAUDE.md](CLAUDE.md).
+
 A Slack bot that tracks [Wordle](https://www.nytimes.com/games/wordle/) scores, posts leaderboards, and talks trash.
 
 Just paste your Wordle share into a channel and the bot handles the rest.
@@ -74,6 +77,14 @@ docker compose up -d
 ```
 
 Invite the bot to a channel and start pasting Wordle shares.
+
+The container base is digest-pinned. The October 2026 certificate update refreshes
+the OS CA package and hash-pins pip 26.2.2, whose bundled certifi is 2026.10.19;
+updating Python alone does not update pip's independent trust store. Rebuild and
+recreate existing containers after deploying this change. Managed installations
+should use their host's systemd deployment workflow for every instance. Verify
+the running trust-store versions and normal Socket Mode operation; the unit
+suite does not connect to Slack.
 
 ### 5. Backfill (optional)
 
