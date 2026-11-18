@@ -13,6 +13,6 @@ RUN apt-get update \
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py commentary.json supplemental.json ./
+COPY app.py logic.py commentary.json supplemental.json ./
 
 CMD ["python", "-u", "app.py"]

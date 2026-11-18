@@ -1,91 +1,43 @@
 """Tests for Wordle bot core logic (no Slack connection needed)."""
 
-import ast
+import tempfile
+import threading
 import unittest
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest import mock
 
-# Parse app.py and extract the constants/functions we need without importing
-# the module (which requires SLACK_BOT_TOKEN at import time).
-_source = open("app.py").read()
-_tree = ast.parse(_source)
-
-# Execute only the parts we can test (everything except the Slack app init
-# and the handlers that depend on it).
-_test_globals = {"__builtins__": __builtins__, "__file__": "app.py"}
-exec(
-    compile(
-        ast.Module(
-            body=[
-                node
-                for node in _tree.body
-                if not isinstance(node, ast.Expr)  # skip docstring
-                and not (
-                    isinstance(node, ast.ImportFrom)
-                    and node.module
-                    and "slack" in node.module
-                )
-                and not (isinstance(node, ast.Assign) and any(
-                    isinstance(t, ast.Name) and t.id == "app"
-                    for t in node.targets
-                ))
-                # Skip decorated functions (@app.message, @app.command)
-                and not (
-                    isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and node.decorator_list
-                    and any(
-                        isinstance(d, ast.Call)
-                        and isinstance(d.func, ast.Attribute)
-                        and isinstance(d.func.value, ast.Name)
-                        and d.func.value.id == "app"
-                        for d in node.decorator_list
-                    )
-                )
-                # Skip if __name__ == "__main__" block
-                and not (
-                    isinstance(node, ast.If)
-                    and isinstance(node.test, ast.Compare)
-                    and isinstance(node.test.left, ast.Name)
-                    and node.test.left.id == "__name__"
-                )
-            ],
-            type_ignores=[],
-        ),
-        "<test>",
-        "exec",
-    ),
-    _test_globals,
+import logic
+from logic import (
+    COMMENTARY,
+    HARD_MODE_RE,
+    SUPPLEMENTAL,
+    WORDLE_RE,
+    _apply_diacritics,
+    _format_ambient,
+    build_daily_summary,
+    build_leaderboard,
+    build_shame_list,
+    build_sparkline,
+    build_monthly_recap,
+    build_vs,
+    build_yearly_recap,
+    calc_streak,
+    check_comeback,
+    check_group_records,
+    check_personal_best,
+    check_puzzle_milestone,
+    check_rivalry,
+    check_streak,
+    fetch_wordle_answer,
+    get_active_players,
+    get_commentary,
+    get_group_streak,
+    get_smart_commentary,
+    get_user_scores,
+    get_user_stats,
+    rank_icon,
 )
-
-# Pull tested functions/constants into module scope
-WORDLE_RE = _test_globals["WORDLE_RE"]
-HARD_MODE_RE = _test_globals["HARD_MODE_RE"]
-get_user_scores = _test_globals["get_user_scores"]
-calc_streak = _test_globals["calc_streak"]
-get_user_stats = _test_globals["get_user_stats"]
-get_commentary = _test_globals["get_commentary"]
-build_leaderboard = _test_globals["build_leaderboard"]
-build_daily_summary = _test_globals["build_daily_summary"]
-build_personal_stats = _test_globals["build_personal_stats"]
-build_vs = _test_globals["build_vs"]
-build_hardest_puzzles = _test_globals["build_hardest_puzzles"]
-build_shame_list = _test_globals["build_shame_list"]
-get_active_players = _test_globals["get_active_players"]
-check_rivalry = _test_globals["check_rivalry"]
-fetch_wordle_answer = _test_globals["fetch_wordle_answer"]
-build_sparkline = _test_globals["build_sparkline"]
-check_comeback = _test_globals["check_comeback"]
-check_personal_best = _test_globals["check_personal_best"]
-check_group_records = _test_globals["check_group_records"]
-get_group_streak = _test_globals["get_group_streak"]
-check_puzzle_milestone = _test_globals["check_puzzle_milestone"]
-build_monthly_recap = _test_globals["build_monthly_recap"]
-build_yearly_recap = _test_globals["build_yearly_recap"]
-rank_icon = _test_globals["rank_icon"]
-get_smart_commentary = _test_globals["get_smart_commentary"]
-check_streak = _test_globals["check_streak"]
-COMMENTARY = _test_globals["COMMENTARY"]
-SUPPLEMENTAL = _test_globals.get("SUPPLEMENTAL", {})
-_apply_diacritics = _test_globals.get("_apply_diacritics")
-_format_conditions = _test_globals.get("_format_conditions")
 
 
 # --- Test data ---
@@ -204,7 +156,7 @@ class TestGetUserStats(unittest.TestCase):
         self.assertIsNone(get_user_stats(SAMPLE_SCORES, "U99"))
 
     def test_streak(self):
-        stats = get_user_stats(SAMPLE_SCORES, "U1")
+        stats = get_user_stats(SAMPLE_SCORES, "U1", today_puzzle=1303)
         self.assertEqual(stats["current_streak"], 3)
         self.assertEqual(stats["best_streak"], 3)
 
@@ -337,16 +289,30 @@ class TestTiedRankings(unittest.TestCase):
 
 
 class TestFetchWordleAnswer(unittest.TestCase):
-    def test_fetches_known_date(self):
-        from datetime import date
-        answer = fetch_wordle_answer(date(2026, 3, 12))
-        self.assertIsNotNone(answer)
-        self.assertEqual(answer, "smell")
+    @staticmethod
+    def _fake_urlopen(payload):
+        class _Resp:
+            def read(self):
+                return payload
 
-    def test_returns_none_on_invalid_date(self):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        return lambda req, timeout=None: _Resp()
+
+    def test_parses_solution(self):
         from datetime import date
-        answer = fetch_wordle_answer(date(1999, 1, 1))
-        self.assertIsNone(answer)
+        fake = self._fake_urlopen(b'{"solution": "smell"}')
+        with mock.patch("logic.urllib.request.urlopen", fake):
+            self.assertEqual(fetch_wordle_answer(date(2026, 3, 12)), "smell")
+
+    def test_returns_none_on_error(self):
+        from datetime import date
+        with mock.patch("logic.urllib.request.urlopen", side_effect=OSError("no network")):
+            self.assertIsNone(fetch_wordle_answer(date(1999, 1, 1)))
 
 
 class TestGetActivePlayers(unittest.TestCase):
@@ -373,7 +339,7 @@ class TestShameList(unittest.TestCase):
                 "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
             }
         }
-        shame, has_missing = build_shame_list(scores)
+        shame, has_missing = build_shame_list(scores, today_puzzle=100)
         self.assertIn("Everyone", shame)
         self.assertFalse(has_missing)
 
@@ -387,7 +353,7 @@ class TestShameList(unittest.TestCase):
                 "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
             },
         }
-        shame, has_missing = build_shame_list(scores)
+        shame, has_missing = build_shame_list(scores, today_puzzle=101)
         self.assertIn("U2", shame)
         self.assertNotIn("U1", shame)
         self.assertTrue(has_missing)
@@ -724,6 +690,19 @@ class TestSupplementalLoader(unittest.TestCase):
         for tmpl in SUPPLEMENTAL["shame"]:
             self.assertIn("{names}", tmpl)
 
+    def test_has_all_cycle_phases(self):
+        self.assertIn("cycle", SUPPLEMENTAL)
+        for phase in ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
+                      "full", "waning_gibbous", "last_quarter", "waning_crescent"]:
+            self.assertIn(phase, SUPPLEMENTAL["cycle"], f"Missing phase: {phase}")
+            self.assertTrue(len(SUPPLEMENTAL["cycle"][phase]) >= 1, f"No templates for {phase}")
+
+    def test_temperature_templates_have_placeholder(self):
+        self.assertIn("temperature", SUPPLEMENTAL)
+        self.assertTrue(len(SUPPLEMENTAL["temperature"]) >= 1)
+        for tmpl in SUPPLEMENTAL["temperature"]:
+            self.assertIn("{temp}", tmpl)
+
 
 class TestApplyDiacritics(unittest.TestCase):
     def test_adds_combining_chars(self):
@@ -744,7 +723,7 @@ class TestApplyDiacritics(unittest.TestCase):
         self.assertEqual(result, "123")
 
 
-class TestFormatConditions(unittest.TestCase):
+class TestFormatAmbient(unittest.TestCase):
     def test_formats_full_data(self):
         data = {
             "current": {
@@ -754,19 +733,19 @@ class TestFormatConditions(unittest.TestCase):
                 "swell_wave_direction": 280,
             }
         }
-        result = _format_conditions(data, "Mavericks")
-        self.assertIn("Mavericks", result)
+        result = _format_ambient(data, "Loc-1")
+        self.assertIn("Loc-1", result)
         self.assertIn("1.2m", result)
         self.assertIn("9.5s", result)
 
     def test_wave_height_only(self):
         data = {"current": {"wave_height": 2.0}}
-        result = _format_conditions(data, "Ocean Beach")
-        self.assertIn("Ocean Beach", result)
+        result = _format_ambient(data, "Loc-2")
+        self.assertIn("Loc-2", result)
         self.assertIn("2.0m", result)
 
     def test_missing_current(self):
-        result = _format_conditions({}, "Bolinas")
+        result = _format_ambient({}, "Loc-3")
         self.assertIn("No data", result)
 
     def test_direction_conversion(self):
@@ -779,17 +758,65 @@ class TestFormatConditions(unittest.TestCase):
                 "swell_wave_direction": 270,
             }
         }
-        result = _format_conditions(data, "Fort Point")
+        result = _format_ambient(data, "Loc-4")
         self.assertIn("W", result)
+
+    def test_includes_temperature_line(self):
+        data = {
+            "current": {
+                "wave_height": 1.5,
+                "swell_wave_height": 1.2,
+                "swell_wave_period": 9.5,
+                "swell_wave_direction": 280,
+                "sea_surface_temperature": 14.43,
+            }
+        }
+        result = _format_ambient(data, "Loc-1")
+        self.assertIn("14.4°C", result)
+
+    def test_no_temp_line_when_temp_missing(self):
+        data = {"current": {"wave_height": 2.0}}
+        result = _format_ambient(data, "Loc-2")
+        self.assertNotIn("°C", result)
+
+
+class TestCyclePhase(unittest.TestCase):
+    REF_EPOCH = datetime(2000, 1, 6, 18, 14)
+    CYCLE_DAYS = 29.530588853
+    PHASES = ["new", "waxing_crescent", "first_quarter", "waxing_gibbous",
+              "full", "waning_gibbous", "last_quarter", "waning_crescent"]
+
+    def test_known_reference(self):
+        self.assertEqual(logic._cycle_phase(self.REF_EPOCH), "new")
+
+    def test_quarter_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS / 4)
+        self.assertEqual(logic._cycle_phase(dt), "first_quarter")
+
+    def test_half_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS / 2)
+        self.assertEqual(logic._cycle_phase(dt), "full")
+
+    def test_three_quarter_cycle(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS * 3 / 4)
+        self.assertEqual(logic._cycle_phase(dt), "last_quarter")
+
+    def test_wraps_after_many_cycles(self):
+        dt = self.REF_EPOCH + timedelta(days=self.CYCLE_DAYS * 100)
+        self.assertEqual(logic._cycle_phase(dt), "new")
+
+    def test_always_returns_valid_phase_key(self):
+        for offset in range(31):
+            phase = logic._cycle_phase(datetime(2026, 7, 1) + timedelta(days=offset))
+            self.assertIn(phase, self.PHASES)
 
 
 class TestAltModeCommentary(unittest.TestCase):
     def setUp(self):
-        self._original = _test_globals.get("_alt_active", False)
-        _test_globals["_alt_active"] = True
+        logic.activate_alt_mode(None)
 
     def tearDown(self):
-        _test_globals["_alt_active"] = self._original
+        logic._deactivate_alt_mode()
 
     def test_alt_score_commentary(self):
         for score in ["1", "2", "3", "4", "5", "6", "X"]:
@@ -821,7 +848,7 @@ class TestAltModeCommentary(unittest.TestCase):
                 "U1": {"score": "5", "hard_mode": False, "timestamp": "2025-01-02T12:00:00"},
             },
         }
-        shame, has_missing = build_shame_list(scores)
+        shame, has_missing = build_shame_list(scores, today_puzzle=101)
         self.assertTrue(has_missing)
         has_crab_emoji = "\U0001f980" in shame or "\U0001f30a" in shame
         self.assertTrue(has_crab_emoji, f"Shame message missing crab/wave emoji: {shame}")
@@ -829,11 +856,10 @@ class TestAltModeCommentary(unittest.TestCase):
 
 class TestAltModeDailySummary(unittest.TestCase):
     def setUp(self):
-        self._original = _test_globals.get("_alt_active", False)
-        _test_globals["_alt_active"] = True
+        logic.activate_alt_mode(None)
 
     def tearDown(self):
-        _test_globals["_alt_active"] = self._original
+        logic._deactivate_alt_mode()
 
     def test_alt_daily_summary_header(self):
         scores = {
@@ -857,6 +883,176 @@ class TestAltModeDailySummary(unittest.TestCase):
         normal_texts = ["easy one today", "solid challenge", "tough one today", "brutal. absolute brutality."]
         has_normal = any(t in summary for t in normal_texts)
         self.assertFalse(has_normal, "Should use alt difficulty text in alt mode")
+
+
+class TestShameListToday(unittest.TestCase):
+    def test_nobody_played_today_shames_active_players(self):
+        scores = {
+            "100": {
+                "U1": {"score": "3", "hard_mode": False, "timestamp": "2025-01-01T12:00:00"},
+                "U2": {"score": "4", "hard_mode": False, "timestamp": "2025-01-01T12:05:00"},
+            }
+        }
+        shame, has_missing = build_shame_list(scores, today_puzzle=101)
+        self.assertTrue(has_missing)
+        self.assertIn("U1", shame)
+        self.assertIn("U2", shame)
+
+
+class TestStreakDecay(unittest.TestCase):
+    def test_current_streak_zeroed_when_stale(self):
+        stats = get_user_stats(SAMPLE_SCORES, "U1", today_puzzle=1310)
+        self.assertEqual(stats["current_streak"], 0)
+        self.assertEqual(stats["best_streak"], 3)
+
+    def test_current_streak_survives_when_played_yesterday(self):
+        stats = get_user_stats(SAMPLE_SCORES, "U1", today_puzzle=1303)
+        self.assertEqual(stats["current_streak"], 3)
+
+
+class TestAltModeExpiry(unittest.TestCase):
+    def tearDown(self):
+        logic._deactivate_alt_mode()
+
+    def test_expired_alt_mode_reverts_to_normal_commentary(self):
+        logic._alt_active = True
+        logic._alt_activated_at = datetime.now() - timedelta(hours=25)
+        c = get_commentary("3")
+        self.assertIn(c, COMMENTARY["score_3"])
+        self.assertFalse(logic._alt_active)
+
+    def test_fresh_alt_mode_still_active(self):
+        logic._alt_active = True
+        logic._alt_activated_at = datetime.now() - timedelta(hours=23)
+        c = get_commentary("3")
+        self.assertIn(c, SUPPLEMENTAL["score_3"])
+
+
+class TempDataDirTestCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self._old_dir = logic.DATA_DIR
+        self._old_scores = logic.SCORES_FILE
+        self._old_config = logic.CONFIG_FILE
+        logic.DATA_DIR = Path(self._tmp.name)
+        logic.SCORES_FILE = logic.DATA_DIR / "scores.json"
+        logic.CONFIG_FILE = logic.DATA_DIR / "config.json"
+
+    def tearDown(self):
+        logic.DATA_DIR = self._old_dir
+        logic.SCORES_FILE = self._old_scores
+        logic.CONFIG_FILE = self._old_config
+        self._tmp.cleanup()
+
+
+class TestRecordScoreConcurrency(TempDataDirTestCase):
+    def test_simultaneous_scores_all_recorded(self):
+        barrier = threading.Barrier(8)
+
+        def submit(uid):
+            barrier.wait()
+            logic.record_score(uid, "1500", "3")
+
+        threads = [threading.Thread(target=submit, args=(f"U{i}",)) for i in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(len(logic.load_scores()["1500"]), 8)
+
+
+class TestRecordScoresBulk(TempDataDirTestCase):
+    def test_bulk_skips_existing_and_writes_once(self):
+        logic.record_score("U1", "1500", "3")
+        saves = []
+        real_save = logic.save_scores
+
+        def counting_save(scores):
+            saves.append(1)
+            real_save(scores)
+
+        logic.save_scores = counting_save
+        try:
+            count = logic.record_scores_bulk([
+                ("U1", "1500", "4", False),
+                ("U2", "1500", "2", True),
+                ("U3", "1501", "X", False),
+            ])
+        finally:
+            logic.save_scores = real_save
+
+        self.assertEqual(count, 2)
+        self.assertEqual(len(saves), 1)
+        scores = logic.load_scores()
+        self.assertEqual(scores["1500"]["U1"]["score"], "3")
+        self.assertEqual(scores["1500"]["U2"]["score"], "2")
+        self.assertTrue(scores["1500"]["U2"]["hard_mode"])
+        self.assertEqual(scores["1501"]["U3"]["score"], "X")
+
+
+class TestUpdateConfigConcurrency(TempDataDirTestCase):
+    def test_simultaneous_config_writes_all_survive(self):
+        # Without the lock this loses updates the same way scores.json did:
+        # eight threads each read-modify-write config, most vanish.
+        barrier = threading.Barrier(8)
+
+        def grant(uid):
+            barrier.wait()
+
+            def _mutate(config):
+                config.setdefault("achievements", {})[uid] = ["first_solve"]
+                return True
+
+            logic.update_config(_mutate)
+
+        threads = [threading.Thread(target=grant, args=(f"U{i}",)) for i in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(len(logic.load_config()["achievements"]), 8)
+
+    def test_falsy_mutate_skips_write(self):
+        self.assertFalse(logic.CONFIG_FILE.exists())
+        self.assertFalse(logic.update_config(lambda config: False))
+        self.assertFalse(logic.CONFIG_FILE.exists())
+
+
+class FakePagingClient:
+    """Minimal stand-in for Slack's users_list cursor pagination."""
+
+    def __init__(self, pages):
+        self._pages = pages
+
+    def users_list(self, **kwargs):
+        cursor = kwargs.get("cursor")
+        idx = int(cursor) if cursor else 0
+        nxt = str(idx + 1) if idx + 1 < len(self._pages) else ""
+        return {
+            "members": self._pages[idx],
+            "response_metadata": {"next_cursor": nxt},
+        }
+
+
+class TestLookupUserByName(unittest.TestCase):
+    def test_finds_user_on_a_later_page(self):
+        client = FakePagingClient([
+            [{"id": "U1", "name": "alice", "profile": {}}],
+            [{"id": "U2", "name": "bob", "profile": {"display_name": "Bobby", "real_name": "Bob B"}}],
+        ])
+        self.assertEqual(logic.lookup_user_by_name(client, "bobby"), "U2")
+
+    def test_unknown_name_returns_none(self):
+        client = FakePagingClient([[{"id": "U1", "name": "alice", "profile": {}}]])
+        self.assertIsNone(logic.lookup_user_by_name(client, "zed"))
+
+    def test_skips_bots_and_deleted(self):
+        client = FakePagingClient([[
+            {"id": "U3", "name": "carol", "is_bot": True, "profile": {}},
+            {"id": "U4", "name": "carol", "deleted": True, "profile": {}},
+            {"id": "U5", "name": "carol", "profile": {}},
+        ]])
+        self.assertEqual(logic.lookup_user_by_name(client, "carol"), "U5")
 
 
 if __name__ == "__main__":

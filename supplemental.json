@@ -302,7 +302,49 @@
     "🦀 The *Cardisoma guanhumi* can migrate up to 8 km from the ocean and still return. Impressive navigation."
   ],
 
-  "surf_spots": {
+  "cycle": {
+    "new": [
+      "🌊 New moon. The tide swings to its spring maximum. *Uca* — the fiddler crabs — set their larval release to precisely this darkness. The colony keeps the schedule.",
+      "🦀 New moon. No light on the water, and the strongest tides of the month. The intertidal is at its most ambitious tonight."
+    ],
+    "waxing_crescent": [
+      "🦀 Waxing crescent. The tides begin to slacken from their peak. Foraging ranges are still generous. The specimens take advantage.",
+      "🌊 Waxing crescent. The moon returns to the sky by degrees. Many *Brachyura* are already reading the change in amplitude."
+    ],
+    "first_quarter": [
+      "🌊 First quarter. Neap tides — the water moves the least it will all month. Foraging ranges contract. The crabs conserve their effort.",
+      "🦀 First quarter moon. The tidal range is at its minimum. A quiet interval in the intertidal. The colony waits."
+    ],
+    "waxing_gibbous": [
+      "🦀 Waxing gibbous. The *Uca* population is aware. Activity climbs as the tides rebuild toward the full moon.",
+      "🌊 Waxing gibbous. The water reaches a little further up the shore each cycle now. Anticipation, if a tide can be said to anticipate."
+    ],
+    "full": [
+      "🌊 Full moon. Spring tides at their peak. *Gecarcinus* and *Uca* alike release their larvae into the strongest current of the month.",
+      "🦀 Full moon. Maximum tidal range, maximum light. Many crustaceans time their entire reproductive year to this single night."
+    ],
+    "waning_gibbous": [
+      "🦀 Waning gibbous. The tide's reach begins to recede. On Christmas Island, the *Gecarcoidea natalis* columns are, somewhere, already moving toward the sea.",
+      "🌊 Waning gibbous. The moon is past full and the spring tides ebb. The red crabs read the fading light."
+    ],
+    "last_quarter": [
+      "🌊 Last quarter. Neap tides return. The *Gecarcoidea natalis* spawning is timed to the turn of this exact high tide, before dawn — a precision that borders on the unreasonable.",
+      "🦀 Last quarter moon. The red crabs of Christmas Island release their eggs on the receding tide, now, and only now. The synchronisation is not a coincidence."
+    ],
+    "waning_crescent": [
+      "🦀 Waning crescent. The lunar cycle closes. The intertidal grows quiet, waiting for the new moon to restart a rhythm the crabs have kept for 200 million years.",
+      "🌊 Waning crescent. Almost no moon left. The tides are unremarkable. Even the crabs seem to be conserving material for the next cycle."
+    ]
+  },
+
+  "temperature": [
+    "🦀 The water is {temp}°C. The crabs are comfortable. Whether you are is not the research team's concern.",
+    "🌊 Sea surface holding at {temp}°C. Dungeness molt timing is sensitive to precisely this figure.",
+    "🌊 Water temperature: {temp}°C. Within tolerance for the local *Cancer* species. Marginal, at best, for you.",
+    "🌊 {temp}°C at the surface. Cold enough to keep the metabolism deliberate. The crabs prefer it this way."
+  ],
+
+  "locations": {
     "Mavericks": [37.4936, -122.4967],
     "Ocean Beach": [37.7609, -122.5108],
     "Steamer Lane": [36.9519, -122.0261],
